@@ -1,0 +1,35 @@
+# vim: set et ts=2 sw=2:
+package pathparser
+
+type Peg Peg {
+    Path
+}
+
+path    <- segment+ slash? eos            { p.finish() }
+expr    <- literal / optional / capture
+segment <- slash expr
+
+optional  <- bo expr segment* eo
+capture   <- bc name (':' values ) ? ec
+name      <- <alpha set0*>                { p.addNode(nodeCaptureIdentifier, text) }
+values    <- option ('|' option)*
+option    <- <any+>                       { p.addNode(nodeCaptureOption, text) }
+
+literal       <- literal_chars+
+literal_chars <- <set1+>                  { p.addNode(nodeLiteral, text) } /
+                 '.'                      { p.addNode(nodeLiteral, "\\.") }
+
+slash <- '/' { p.addNode(nodeLiteral, "/") }
+bo    <- '[' { p.beginOptional() }
+eo    <- ']' { p.endOptional() }
+bc    <- '{' { p.beginCapture() }
+ec    <- '}' { p.endCapture() }
+
+# lexical
+#
+alpha <- [a-z] / [A-Z]
+num   <- [0-9]
+set0  <- alpha / num / '_'
+set1  <- set0 / '-' / '+' / ',' / '%'
+any   <- set1 / '.' / '\\'
+eos   <- !.
