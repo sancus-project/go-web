@@ -94,26 +94,21 @@ func (p *Path) endCapture() {
 
 func (p *Path) finish() {
 	s := []string{`^`}
-	last := len(p.nodes) - 1
 
-	for i, np := range p.nodes {
-		if i != last {
-			s = append(s, np.s)
-		} else {
-			i = 1
-
-			if np.s != "/" {
-				s = append(s, np.s, `$`)
-			} else {
-				s = append(s, `(/|$)`)
-				p.nodes[i].s = np.s
-				i++
-			}
-
-			p.nodes[0].s = strings.Join(s, "")
-			p.nodes = p.nodes[0:i]
-		}
+	for _, np := range p.nodes {
+		s = append(s, np.s)
 	}
+
+	i, last := 1, len(s)-1
+	if s[last] != `/` {
+		s = append(s, `$`)
+	} else {
+		s[last] = `(/|$)`
+		i++
+	}
+
+	p.nodes[0].s = strings.Join(s, "")
+	p.nodes = p.nodes[0:i]
 }
 
 func (p *Path) Result() (string, bool) {
