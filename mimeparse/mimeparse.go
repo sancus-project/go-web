@@ -15,9 +15,9 @@
 package mimeparse
 
 import (
-	"os"
-	"strings"
+	"fmt"
 	"strconv"
+	"strings"
 )
 
 func ht(list []string) (head string, tail []string) {
@@ -25,8 +25,9 @@ func ht(list []string) (head string, tail []string) {
 		return "", []string{}
 	} else if len(list) == 1 {
 		return list[0], []string{}
+	} else {
+		return list[0], list[1:]
 	}
-	return list[0], list[1:len(list)]
 }
 
 type Mime struct {
@@ -45,12 +46,12 @@ type Mime struct {
 // get parsed into:
 //
 // Mime {'application', 'xhtml', {'q', '0.5'}}, nil
-func ParseMimeType(mimetype string) (parsed Mime, err os.Error) {
-	full_type, parts := ht(strings.Split(mimetype, ";", -1))
+func ParseMimeType(mimetype string) (parsed Mime, err error) {
+	full_type, parts := ht(strings.Split(mimetype, ","))
 	full_type = strings.ToLower(full_type)
 	params := make(map[string]string)
 	for _, s := range parts {
-		subparts := strings.Split(s, "=", 2)
+		subparts := strings.Split(s, "=")
 		if len(subparts) == 2 {
 			params[strings.ToLower(strings.TrimSpace(subparts[0]))] = strings.TrimSpace(subparts[1])
 		} else {
@@ -60,9 +61,9 @@ func ParseMimeType(mimetype string) (parsed Mime, err os.Error) {
 	if strings.TrimSpace(full_type) == "*" {
 		full_type = "*/*"
 	}
-	list := strings.Split(full_type, "/", -1)
+	list := strings.Split(full_type, "/")
 	if len(list) != 2 {
-		return Mime{"", "", map[string]string{"q": "0"}}, os.NewError("Not a valid mimetype")
+		return Mime{"", "", map[string]string{"q": "0"}}, fmt.Errorf("Not a valid mimetype")
 	}
 	maintype, subtype := list[0], list[1]
 	return Mime{strings.TrimSpace(maintype), strings.TrimSpace(subtype), params}, nil
@@ -79,13 +80,13 @@ func ParseMimeType(mimetype string) (parsed Mime, err os.Error) {
 // In addition this function also guarantees that there
 // is a value for 'q' in the params dictionary, filling it
 // in with a proper default if necessary.
-func ParseMediaRange(mediarange string) (mime Mime, err os.Error) {
+func ParseMediaRange(mediarange string) (mime Mime, err error) {
 	parsed, err := ParseMimeType(mediarange)
 	if err != nil {
 		return parsed, err
 	}
 	if q, ok := parsed.params["q"]; ok {
-		if val, err := strconv.Atof(q); err != nil || val > 1.0 || val < 0.0 {
+		if val, err := strconv.ParseFloat(q, 64); err != nil || val > 1.0 || val < 0.0 {
 			parsed.params["q"] = "1"
 		}
 	} else {
@@ -94,7 +95,6 @@ func ParseMediaRange(mediarange string) (mime Mime, err os.Error) {
 	return parsed, nil
 }
 
-
 // Find the best match for a given mime-type against
 // a list of media_ranges that have already been
 // parsed by ParseMediaRange(). Returns a tuple of
@@ -102,7 +102,7 @@ func ParseMediaRange(mediarange string) (mime Mime, err os.Error) {
 // parameter of the best match, or (-1, 0) if no match
 // was found. Just as for QualityParsed(), 'parsedranges'
 // must be a list of parsed media ranges.
-func FitnessAndQuality(mimetype string, parsedRanges []Mime) (fitness int, quality float) {
+func FitnessAndQuality(mimetype string, parsedRanges []Mime) (fitness int, quality float64) {
 	bestfitness := -1
 	bestquality := 0.0
 	target, _ := ParseMediaRange(mimetype)
@@ -128,7 +128,7 @@ func FitnessAndQuality(mimetype string, parsedRanges []Mime) (fitness int, quali
 			}
 			if fitness > bestfitness {
 				bestfitness = fitness
-				bestquality, _ = strconv.Atof(r.params["q"])
+				bestquality, _ = strconv.ParseFloat(r.params["q"], 64)
 			}
 		}
 	}
@@ -143,13 +143,13 @@ func FitnessAndQuality(mimetype string, parsedRanges []Mime) (fitness int, quali
 //    match was found. This function bahaves the same as quality()
 //    except that 'parsed_ranges' must be a list of
 //    parsed media ranges.
-func QualityParsed(mimetype string, parsedRanges []Mime) (quality float) {
+func QualityParsed(mimetype string, parsedRanges []Mime) (quality float64) {
 	_, quality = FitnessAndQuality(mimetype, parsedRanges)
 	return
 }
 
 func ParseHeader(header string) (parsed []Mime) {
-	ranges := strings.Split(header, ",", -1)
+	ranges := strings.Split(header, ",")
 	parsed = make([]Mime, len(ranges))
 	for i, r := range ranges {
 		parsed[i], _ = ParseMediaRange(r)
@@ -162,7 +162,7 @@ func ParseHeader(header string) (parsed []Mime) {
 //
 // Quality('text/html','text/*;q=0.3, text/html;q=0.7, text/html;level=1, text/html;level=2;q=0.4, * / *;q=0.5')
 // 0.7
-func Quality(mimetype string, ranges string) (quality float) {
+func Quality(mimetype string, ranges string) (quality float64) {
 	return QualityParsed(mimetype, ParseHeader(ranges))
 }
 
