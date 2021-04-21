@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strings"
-
-	"go.sancus.dev/web"
 )
 
 type PanicError struct {
@@ -65,7 +63,7 @@ func (p PanicError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // backtrace based on github.com/go-chi/middleware/recoverer
-func Panic(rvr interface{}) web.Error {
+func Panic(rvr interface{}) *PanicError {
 	// process debug stack info
 	stack := strings.Split(string(debug.Stack()), "\n")
 	lines := []string{}
@@ -93,7 +91,7 @@ func Panic(rvr interface{}) web.Error {
 	return v
 }
 
-func Recover() web.Error {
+func Recover() *PanicError {
 	if rvr := recover(); rvr == nil {
 		return nil
 	} else if p, ok := rvr.(*PanicError); ok {
