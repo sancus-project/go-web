@@ -41,7 +41,7 @@ func HandleMiddlewareError(w http.ResponseWriter, r *http.Request, err error, ne
 				code = http.StatusInternalServerError
 			}
 
-			h = &errors.HandlerError{
+			h = &HandlerError{
 				Code: code,
 				Err:  err,
 			}
