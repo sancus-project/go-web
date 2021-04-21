@@ -92,3 +92,15 @@ func Panic(rvr interface{}) web.Error {
 
 	return v
 }
+
+func Recover() web.Error {
+	if rvr := recover(); rvr == nil {
+		return nil
+	} else if p, ok := rvr.(*PanicError); ok {
+		// pass previous panic along
+		return p
+	} else {
+		// spawn new PanicError
+		return Panic(rvr)
+	}
+}
