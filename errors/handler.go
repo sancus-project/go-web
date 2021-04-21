@@ -5,6 +5,10 @@ import (
 	"net/http"
 )
 
+var (
+	ErrNotFound = &HandlerError{Code: http.StatusNotFound}
+)
+
 // Reference Handler error
 type HandlerError struct {
 	Code int

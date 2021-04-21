@@ -7,20 +7,20 @@ import (
 	"go.sancus.dev/web"
 )
 
-type ErrMethodNotAllowed struct {
+type MethodNotAllowedError struct {
 	Method  string
 	Allowed []string
 }
 
 func MethodNotAllowed(method string, allowed ...string) web.Error {
-	err := &ErrMethodNotAllowed{
+	err := &MethodNotAllowedError{
 		Method:  method,
 		Allowed: allowed,
 	}
 	return err
 }
 
-func (err *ErrMethodNotAllowed) Status() int {
+func (err *MethodNotAllowedError) Status() int {
 	if err.Method == "OPTIONS" {
 		return http.StatusOK
 	} else {
@@ -28,11 +28,11 @@ func (err *ErrMethodNotAllowed) Status() int {
 	}
 }
 
-func (err *ErrMethodNotAllowed) Error() string {
+func (err *MethodNotAllowedError) Error() string {
 	return ErrorText(err.Status())
 }
 
-func (err *ErrMethodNotAllowed) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (err *MethodNotAllowedError) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	code := err.Status()
 
 	methods := append(err.Allowed, "OPTIONS")

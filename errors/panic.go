@@ -65,7 +65,7 @@ func (p PanicError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // backtrace based on github.com/go-chi/middleware/recoverer
-func NewPanicError(rvr interface{}) web.Error {
+func Panic(rvr interface{}) web.Error {
 	// process debug stack info
 	stack := strings.Split(string(debug.Stack()), "\n")
 	lines := []string{}
