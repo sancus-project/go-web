@@ -38,9 +38,12 @@ func (err HandlerError) Error() string {
 }
 
 func (err HandlerError) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	if code := err.Status(); code == http.StatusOK {
+	code := err.Status()
+
+	switch code {
+	case http.StatusOK, http.StatusNoContent:
 		w.WriteHeader(http.StatusNoContent)
-	} else {
+	default:
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.WriteHeader(code)
