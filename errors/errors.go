@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"go.sancus.dev/web"
@@ -20,22 +19,39 @@ func ErrorText(code int) string {
 	return text
 }
 
-func HandleError(w http.ResponseWriter, r *http.Request, err error, next http.Handler) {
-	if err == nil {
-		// served
-	} else if h, ok := err.(web.Error); ok && h.Status() == http.StatusNotFound {
-
+func HandleMiddlewareError(w http.ResponseWriter, r *http.Request, err error, next http.Handler) {
+	if err != nil {
 		if next != nil {
-			next.ServeHTTP(w, r)
-		} else if h, ok := err.(http.Handler); ok {
-			h.ServeHTTP(w, r)
-		} else {
-			http.NotFound(w, r)
+			// middleware
+			if e, ok := err.(web.Error); ok && e.Status() == http.StatusNotFound {
+				next.ServeHTTP(w, r)
+				return
+			}
 		}
 
-	} else if h, ok := err.(http.Handler); ok {
+		// does the error know how to render itself?
+		h, ok := err.(http.Handler)
+		if !ok {
+			var code int
+
+			// but if it doesn't, wrap it in HandlerError{}
+			if e, ok := err.(web.Error); ok {
+				code = e.Status()
+			} else {
+				code = http.StatusInternalServerError
+			}
+
+			h = &errors.HandlerError{
+				Code: code,
+				Err:  err,
+			}
+		}
+
 		h.ServeHTTP(w, r)
-	} else {
-		log.Fatal(err)
 	}
+
+}
+
+func HandleError(w http.ResponseWriter, r *http.Request, err error) {
+	HandleMiddlewareError(w, r, err, nil)
 }
