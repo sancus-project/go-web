@@ -14,7 +14,7 @@ type Error interface {
 type HandlerFunc func(http.ResponseWriter, *http.Request) error
 
 type Handler interface {
-	Handle(http.ResponseWriter, *http.Request) error
+	TryServeHTTP(http.ResponseWriter, *http.Request) error
 }
 
 type MiddlewareHandlerFunc func(http.Handler) http.Handler
