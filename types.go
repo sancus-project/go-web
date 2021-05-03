@@ -26,3 +26,7 @@ type MiddlewareHandlerFunc func(http.Handler) http.Handler
 type MiddlewareHandler interface {
 	Middleware(http.Handler) http.Handler
 }
+
+func (f MiddlewareHandlerFunc) Middleware(next http.Handler) http.Handler {
+	return f(next)
+}
