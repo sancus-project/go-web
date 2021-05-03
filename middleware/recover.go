@@ -7,7 +7,7 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
-func Recover(h web.ErrorHandlerFunc) web.MiddlewareHandlerFunc {
+func Recoverer(h web.ErrorHandlerFunc) web.MiddlewareHandlerFunc {
 	if h == nil {
 		h = errors.HandleError
 	}
