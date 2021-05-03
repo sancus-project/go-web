@@ -13,6 +13,10 @@ type Error interface {
 
 type HandlerFunc func(http.ResponseWriter, *http.Request) error
 
+func (f HandlerFunc) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
+	return f(w, r)
+}
+
 type Handler interface {
 	TryServeHTTP(http.ResponseWriter, *http.Request) error
 }
