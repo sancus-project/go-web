@@ -19,6 +19,6 @@ type Handler interface {
 
 type MiddlewareHandlerFunc func(http.Handler) http.Handler
 
-type MiddlewareHandler interface{
+type MiddlewareHandler interface {
 	Middleware(http.Handler) http.Handler
 }
