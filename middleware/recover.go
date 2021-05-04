@@ -7,6 +7,9 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
+// Recoverer creates a middleware to catch panic() and pass it to
+// an ErrorHandler wrapped as *errors.PanicError.
+// If no handler is provided, our errors.HandleError is used.
 func Recoverer(h web.ErrorHandlerFunc) web.MiddlewareHandlerFunc {
 	if h == nil {
 		h = errors.HandleError
