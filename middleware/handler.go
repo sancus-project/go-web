@@ -9,6 +9,7 @@ import (
 
 // Handler creates a middleware that tries to use the web.Handler
 // interface, and pass any error to the provided ErrorHandler.
+// This middleware will also catch panic(), superseeding Recoverer().
 // If no handler is provided, our errors.HandleError is used.
 func Handler(h web.ErrorHandlerFunc) web.MiddlewareHandlerFunc {
 	if h == nil {
@@ -16,25 +17,40 @@ func Handler(h web.ErrorHandlerFunc) web.MiddlewareHandlerFunc {
 	}
 
 	return func(next http.Handler) http.Handler {
+		var fn http.HandlerFunc
 
 		if next == nil {
-			fn := func(w http.ResponseWriter, r *http.Request) {
+			fn = func(w http.ResponseWriter, r *http.Request) {
 				h(w, r, errors.ErrNotFound)
 			}
-			return http.HandlerFunc(fn)
 
 		} else if wh, ok := next.(web.Handler); ok {
 
-			fn := func(w http.ResponseWriter, r *http.Request) {
+			fn = func(w http.ResponseWriter, r *http.Request) {
+				defer func() {
+					if err := errors.Recover(); err != nil {
+						h(w, r, err)
+					}
+				}()
+
 				if err := wh.TryServeHTTP(w, r); err != nil {
 					h(w, r, err)
 				}
 			}
-			return http.HandlerFunc(fn)
 
 		} else {
 
-			return next
+			fn = func(w http.ResponseWriter, r *http.Request) {
+				defer func() {
+					if err := errors.Recover(); err != nil {
+						h(w, r, err)
+					}
+				}()
+
+				next.ServeHTTP(w, r)
+			}
 		}
+
+		return fn
 	}
 }
