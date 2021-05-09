@@ -72,7 +72,7 @@ type PageInfoLanguage interface {
 }
 
 // PageInfo can tell the supported methods supported by the resource
-type PageInfoMethods interface  {
+type PageInfoMethods interface {
 	Method() []string
 }
 
