@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,19 +15,11 @@ func (err *BadRequestError) AppendError(e error) {
 }
 
 func (err *BadRequestError) AppendErrorString(s string) {
-	err.AppendError(errors.New(s))
+	err.AppendError(New(s))
 }
 
 func (err *BadRequestError) AppendErrorf(s string, args ...interface{}) {
-	var e error
-
-	if len(args) > 0 {
-		e = fmt.Errorf(s, args...)
-	} else {
-		e = errors.New(s)
-	}
-
-	err.AppendError(e)
+	err.AppendError(New(s, args...))
 }
 
 func (err *BadRequestError) Ok() bool {
