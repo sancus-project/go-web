@@ -77,6 +77,6 @@ type PageInfoMethods interface  {
 }
 
 // PageInfo can tell what handler to use to request the resource
-type PageInfoHandler() interface {
+type PageInfoHandler interface {
 	Handler() http.Handler
 }
