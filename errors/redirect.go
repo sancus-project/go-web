@@ -7,7 +7,7 @@ import (
 
 type RedirectError struct {
 	location string
-	code int
+	code     int
 }
 
 func (e RedirectError) Location() string {
