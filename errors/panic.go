@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strings"
+
+	"go.sancus.dev/web"
 )
 
 type PanicError struct {
@@ -101,4 +103,46 @@ func Recover() *PanicError {
 		// spawn new PanicError
 		return Panic(rvr)
 	}
+}
+
+// turn a web.Handler into a http.Handler raising panic(error)
+type PanicMaker struct {
+	web.Handler
+}
+
+func (h PanicMaker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := h.TryServeHTTP(w, r); err != nil {
+		panic(err)
+	}
+}
+
+// turn a http.Handler raising panic(error) into a web.Handler
+type PanicInterceptor struct {
+	http.Handler
+}
+
+func (h PanicInterceptor) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
+	var err error
+	h.tryServeHTTP(w, r, &err)
+
+	if p, ok := err.(*PanicError); !ok {
+		// no panic
+		return nil
+	} else if e := p.Unwrap(); e != nil {
+		// panic contains error, return that
+		return e
+	} else {
+		// return the panic
+		return err
+	}
+}
+
+func (h PanicInterceptor) tryServeHTTP(w http.ResponseWriter, r *http.Request, err *error) {
+	defer func() {
+		if e := Recover(); err != nil {
+			*err = e
+		}
+	}()
+
+	h.ServeHTTP(w, r)
 }
