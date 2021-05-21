@@ -23,7 +23,7 @@ func HandleMiddlewareError(w http.ResponseWriter, r *http.Request, err error, ne
 	if err != nil {
 		if next != nil {
 			// middleware
-			if e, ok := err.(web.Error); ok && e.Status() == http.StatusNotFound {
+			if e, ok := err.(web.Error); ok && e != nil && e.Status() == http.StatusNotFound {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -31,11 +31,11 @@ func HandleMiddlewareError(w http.ResponseWriter, r *http.Request, err error, ne
 
 		// does the error know how to render itself?
 		h, ok := err.(http.Handler)
-		if !ok {
+		if !ok || h == nil {
 			var code int
 
 			// but if it doesn't, wrap it in HandlerError{}
-			if e, ok := err.(web.Error); ok {
+			if e, ok := err.(web.Error); ok && e != nil {
 				code = e.Status()
 			} else {
 				code = http.StatusInternalServerError

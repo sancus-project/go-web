@@ -95,6 +95,7 @@ func Panic(rvr interface{}) *PanicError {
 
 func Recover() *PanicError {
 	if rvr := recover(); rvr == nil {
+		// no error
 		return nil
 	} else if p, ok := rvr.(*PanicError); ok {
 		// pass previous panic along
