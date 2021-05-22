@@ -31,7 +31,7 @@ func (m *Interceptor) tryServeHTTP(w http.ResponseWriter, r *http.Request, out *
 func (m *Interceptor) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	var pee *errors.PanicError
 
-	w2 := NewWriter(w)
+	w2 := NewWriter(w, r.Method)
 	m.tryServeHTTP(w2.Writer(), r, &pee)
 
 	// panic?

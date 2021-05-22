@@ -13,12 +13,19 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
+var (
+	ErrNotImplemented = errors.New("Not Implemented")
+)
+
 type WriteInterceptor struct {
 	code           int
+	mute           bool
 	headersWritten bool
 
-	rw      http.ResponseWriter
-	headers http.Header
+	rw       http.ResponseWriter // ResponseWriter wrapper
+	headers  http.Header         // Working copy of Headers
+	original http.Header         // Original Headers table
+	err      web.Error
 }
 
 func (m *WriteInterceptor) Writer() http.ResponseWriter {
@@ -26,53 +33,122 @@ func (m *WriteInterceptor) Writer() http.ResponseWriter {
 }
 
 func (m *WriteInterceptor) Error() web.Error {
-	return nil
+	if !m.headersWritten {
+		return &errors.HandlerError{
+			Code:    http.StatusNoContent,
+			Headers: m.headers,
+		}
+	}
+
+	return m.err
 }
 
 func (m *WriteInterceptor) Header(original httpsnoop.HeaderFunc) http.Header {
-	log.Printf("%+n()", errors.Here(0))
-	return original()
+	return m.headers
 }
 
 func (m *WriteInterceptor) Write(original httpsnoop.WriteFunc, b []byte) (int, error) {
-	log.Printf("%+n(%q (%v))", errors.Here(0), b, len(b))
-	return original(b)
+	if !m.headersWritten {
+		m.rw.WriteHeader(http.StatusOK)
+	}
+
+	if !m.mute {
+		// real
+		return original(b)
+	} else {
+		// fake
+		return len(b), nil
+	}
 }
 
 func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code int) {
-	log.Printf("%+n(%v)", errors.Here(0), code)
-	original(code)
+	if m.headersWritten {
+		log.Fatal(errors.New("%+n(%v): %s", errors.Here(0), code, "Invalid Call"))
+	}
+
+	m.headersWritten = true
+	m.code = code
+
+	if code >= http.StatusContinue && code < http.StatusMultipleChoices {
+		// good, copy headers and write them
+
+		if code == http.StatusNoContent {
+			m.mute = true
+		}
+
+		for k, _ := range m.original {
+			if w, ok := m.headers[k]; !ok {
+				// delete deleted headers
+				m.original.Del(k)
+			} else {
+				// replace value of those that remain
+				m.original[k] = w
+			}
+		}
+
+		for k, v := range m.headers {
+			if _, ok := m.original[k]; !ok {
+				// add new headers
+				m.original[k] = v
+			}
+		}
+
+		original(code)
+
+	} else {
+		// record error for later return
+		m.err = &errors.HandlerError{
+			Code:    code,
+			Headers: m.headers,
+		}
+
+		// and prevent any Write()
+		m.mute = true
+	}
 }
 
 func (m *WriteInterceptor) Flush(original httpsnoop.FlushFunc) {
-	log.Printf("%+n()", errors.Here(0))
-	original()
+	err := ErrNotImplemented
+	log.Fatal(err)
 }
 
 func (m *WriteInterceptor) CloseNotify(original httpsnoop.CloseNotifyFunc) <-chan bool {
-	log.Printf("%+n()", errors.Here(0))
-	return original()
+	err := ErrNotImplemented
+	log.Fatal(err)
+	return nil
 }
 
 func (m *WriteInterceptor) Hijack(original httpsnoop.HijackFunc) (net.Conn, *bufio.ReadWriter, error) {
-	log.Printf("%+n()", errors.Here(0))
-	return original()
+	err := ErrNotImplemented
+	log.Fatal(err)
+	return nil, nil, err
 }
 
 func (m *WriteInterceptor) ReadFrom(original httpsnoop.ReadFromFunc, src io.Reader) (int64, error) {
-	log.Printf("%+n(%v)", errors.Here(0), src)
-	return original(src)
+	err := ErrNotImplemented
+	log.Fatal(err)
+	return 0, err
 }
 
 func (m *WriteInterceptor) Push(original httpsnoop.PushFunc, target string, opts *http.PushOptions) error {
-	log.Printf("%+n(%q, %#v)", errors.Here(0), target, opts)
-	return original(target, opts)
+	err := ErrNotImplemented
+	log.Fatal(err)
+	return err
 }
 
-func NewWriter(w http.ResponseWriter) *WriteInterceptor {
+func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
+	var mute bool
+
+	if method == "HEAD" || method == "OPTIONS" {
+		mute = true
+	}
+
+	h := w.Header()
 	m := &WriteInterceptor{
-		headers: w.Header(),
+		original: h,
+		headers:  h.Clone(),
+		mute:     mute,
 	}
 
 	hooks := httpsnoop.Hooks{
