@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"go.sancus.dev/web"
-	"go.sancus.dev/web/errors"
+	"go.sancus.dev/web/intercept"
 )
 
 type Chain struct {
@@ -15,7 +15,7 @@ type Chain struct {
 // http.Handler
 func (m *Chain) Handle(path string, handler http.Handler) {
 	h := CompileChain(m.chain, handler)
-	m.mux.Handle(path, h)
+	m.mux.TryHandle(path, h)
 }
 
 func (m *Chain) HandleFunc(path string, handler http.HandlerFunc) {
@@ -40,30 +40,22 @@ func (m *Chain) With(f web.MiddlewareHandlerFunc) MiniRouter {
 	return m
 }
 
-func CompileChain(chain []web.MiddlewareHandlerFunc, h http.Handler) http.Handler {
+func CompileChain(chain []web.MiddlewareHandlerFunc, h http.Handler) web.Handler {
 	l := len(chain)
 	for l > 0 {
 		l -= 1
 		h = chain[l](h)
 	}
-	return h
+	return intercept.Intercept(h)
 }
 
-func CompileTryChain(chain []web.MiddlewareHandlerFunc, h0 web.Handler) web.Handler {
-
-	if len(chain) > 0 {
-		h, ok := h0.(http.Handler)
-		if !ok {
-			h = errors.PanicMaker{Handler: h0}
-		}
-
-		h = CompileChain(chain, h)
-
-		h0, ok = h.(web.Handler)
-		if !ok {
-			h0 = errors.PanicInterceptor{Handler: h}
-		}
+func CompileTryChain(chain []web.MiddlewareHandlerFunc, h web.Handler) web.Handler {
+	l := len(chain)
+	if l > 0 {
+		// use fallback error handler to minimize writing
+		h2 := intercept.Resolve(h, nil)
+		h = CompileChain(chain, h2)
 	}
 
-	return h0
+	return h
 }
