@@ -3,14 +3,20 @@ package router
 import (
 	"log"
 	"net/http"
+	"sync"
+
+	"github.com/armon/go-radix"
 
 	"go.sancus.dev/web"
+	"go.sancus.dev/web/context"
 	"go.sancus.dev/web/errors"
 	"go.sancus.dev/web/intercept"
 )
 
 type Mux struct {
+	mu    sync.Mutex
 	chain []web.MiddlewareHandlerFunc
+	trie  *radix.Tree
 	entry web.Handler
 
 	errorHandler web.ErrorHandlerFunc
@@ -22,8 +28,51 @@ func NewRouter(h web.ErrorHandlerFunc) Router {
 	}
 
 	return &Mux{
+		trie:         radix.New(),
 		errorHandler: h,
 	}
+}
+
+func (m *Mux) GetRoutePath(r *http.Request) string {
+	if rctx := context.RouteContext(r.Context()); rctx != nil {
+		return rctx.RoutePath
+	} else {
+		return r.URL.Path
+	}
+}
+
+func (m *Mux) resolve(v interface{}, rctx *context.Context, prefix, path string) (web.Handler, *context.Context, bool) {
+	if h, ok := v.(web.Handler); ok {
+
+		if rctx != nil {
+			rctx = rctx.Step(prefix)
+		} else {
+			rctx = context.NewRouteContext(prefix, path)
+		}
+
+		return h, rctx, true
+	}
+	return nil, nil, false
+}
+
+func (m *Mux) Resolve(path string, rctx *context.Context) (web.Handler, *context.Context, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if s, v, ok := m.trie.LongestPrefix(path); ok {
+		if s == path {
+			return m.resolve(v, rctx, s, "")
+		}
+
+		l := len(s)
+		if s[l-1] == '/' {
+			return m.resolve(v, rctx, s, path[l-1:])
+		} else if path[l] == '/' {
+			return m.resolve(v, rctx, s, path[l:])
+		}
+	}
+
+	return nil, nil, false
 }
 
 // http.Handler
@@ -54,7 +103,19 @@ func (m *Mux) HandleFunc(path string, handler http.HandlerFunc) {
 
 // web.Handler
 func (m *Mux) tryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	// TODO: resolve from trie
+	path := m.GetRoutePath(r)
+	ctx := r.Context()
+
+	rctx := context.RouteContext(ctx)
+
+	if h, rctx, ok := m.Resolve(path, rctx); ok {
+
+		ctx = context.WithRouteContext(ctx, rctx)
+		r = r.WithContext(ctx)
+
+		return h.TryServeHTTP(w, r)
+	}
+
 	return errors.ErrNotFound
 }
 
@@ -68,7 +129,7 @@ func (m *Mux) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (m *Mux) tryHandle(path string, handler web.Handler) error {
-	// TODO: add handler to trie
+	m.trie.Insert(path, handler)
 	return nil
 }
 
