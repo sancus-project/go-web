@@ -2,8 +2,11 @@ package context
 
 import (
 	"context"
+	"log"
 	"path/filepath"
 	"strings"
+
+	"go.sancus.dev/web/errors"
 )
 
 type Context struct {
@@ -40,49 +43,86 @@ func (rctx *Context) Init(prefix, path string) {
 }
 
 func (rctx *Context) Path() string {
+	var s string
+
 	prefix := rctx.RoutePrefix
 	path := rctx.RoutePath
 
 	if prefix == "/" {
-		return path
+		s = path
 	} else if path == "" {
-		return prefix
+		s = prefix
 	} else {
-		return prefix + path
+		s = prefix + path
 	}
+
+	return s
+}
+
+func (rctx *Context) Step(prefix string) *Context {
+	var path string
+
+	pattern := strings.TrimSuffix("/*", rctx.RoutePattern)
+
+	if prefix == rctx.RoutePath {
+		// prefix is the whole RoutePath
+		pattern += prefix
+		prefix = rctx.Path()
+	} else if s := strings.TrimPrefix(rctx.RoutePath, prefix); s != rctx.RoutePath {
+		// prefix is part of the RoutePath
+		pattern += prefix + "/*"
+		if rctx.RoutePrefix != "/" {
+			prefix = rctx.RoutePrefix + prefix
+		}
+
+		path = s
+	} else if n := strings.Index(rctx.RoutePath, prefix); n < 0 {
+		err := errors.New("%+n: prefix:%q incompatible (%#v)",
+			errors.Here(0), prefix, rctx)
+		log.Fatal(err)
+	} else {
+		// offset... resuming nested routing
+		l := n + len(prefix)
+
+		prefix = rctx.RoutePath[:l]
+		path = rctx.RoutePath[l:]
+
+		if prefix+s != rctx.RoutePath {
+			err := errors.New("%+n: BUG: prefix:%q + path:%q != %q",
+				errors.Here(0), prefix, path, rctx.RoutePath)
+			log.Fatal(err)
+		}
+
+		pattern += prefix + "/*"
+		if rctx.RoutePrefix != "/" {
+			prefix = rctx.RoutePrefix + prefix
+		}
+	}
+
+	next := &Context{
+		RoutePath:    path,
+		RoutePrefix:  prefix,
+		RoutePattern: pattern,
+	}
+
+	return next
 }
 
 func (rctx *Context) Next() (*Context, string) {
 
 	path := rctx.RoutePath
-
 	if len(path) > 1 {
+		var prefix string
 
 		s := path[1:]
-		prefix := rctx.RoutePrefix
-		pattern := strings.TrimSuffix("/*", rctx.RoutePattern)
-
-		if prefix == "/" {
-			prefix = ""
-		}
-
 		if n := strings.IndexRune(s, '/'); n < 0 {
-			prefix += path
-			pattern += path
-			path = ""
-
+			prefix = path
 		} else {
 			s = s[:n]
-			prefix += path[:n+1]
-			pattern += path[:n+1] + "/*"
-			path = path[n+1:]
+			prefix = path[:n+1]
 		}
 
-		next := &Context{
-			RoutePath:    path,
-			RoutePrefix:  prefix,
-			RoutePattern: pattern,
-		}
+		next := rctx.Step(prefix)
 
 		return next, s
 	}
