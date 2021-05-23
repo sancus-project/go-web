@@ -2,6 +2,7 @@ package errors
 
 import (
 	"net/http"
+	"strings"
 )
 
 func NewError(code int, headers http.Header, body []byte) error {
