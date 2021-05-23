@@ -19,7 +19,7 @@ func NewError(code int, headers http.Header, body []byte) error {
 		location := headers.Get("Location")
 		return &RedirectError{
 			location: location,
-			code: code,
+			code:     code,
 		}
 	case http.StatusMethodNotAllowed:
 		allowed := headers.Get("Allowed")
@@ -28,7 +28,7 @@ func NewError(code int, headers http.Header, body []byte) error {
 		}
 	default:
 		return &HandlerError{
-			Code: code,
+			Code:    code,
 			Headers: headers,
 		}
 	}

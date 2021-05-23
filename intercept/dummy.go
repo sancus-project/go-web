@@ -8,10 +8,10 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
-type DummyWriter struct{
+type DummyWriter struct {
 	buffer bytes.Buffer
 	header http.Header
-	code int
+	code   int
 
 	headersWritten bool
 }
