@@ -32,7 +32,7 @@ func (err *MethodNotAllowedError) Error() string {
 	return ErrorText(err.Status())
 }
 
-func (err *MethodNotAllowedError) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (err *MethodNotAllowedError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	code := err.Status()
 
 	methods := append(err.Allowed, "OPTIONS")
@@ -43,4 +43,8 @@ func (err *MethodNotAllowedError) ServeHTTP(w http.ResponseWriter, _ *http.Reque
 	} else {
 		http.Error(w, ErrorText(code), code)
 	}
+}
+
+func (err *MethodNotAllowedError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
+	return err
 }
