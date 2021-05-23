@@ -43,8 +43,12 @@ func (dw *DummyWriter) WriteHeader(code int) {
 	dw.headersWritten = true
 }
 
+func (dw *DummyWriter) Error() error {
+	return errors.NewError(dw.Status(), dw.Header(), dw.buffer.Bytes())
+}
+
 func (dw *DummyWriter) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	if err := errors.NewError(dw.Status(), dw.Header(), dw.buffer.Bytes()); err != nil {
+	if err := dw.Error(); err != nil {
 		return err
 	}
 
