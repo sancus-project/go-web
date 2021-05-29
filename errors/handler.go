@@ -42,7 +42,7 @@ func (err HandlerError) Error() string {
 	return ErrorText(err.Status())
 }
 
-func (err HandlerError) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (err HandlerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	code := err.Status()
 
 	if err.Headers != nil {
@@ -65,5 +65,17 @@ func (err HandlerError) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(code)
 
 		fmt.Fprintln(w, ErrorText(code))
+	}
+}
+
+func (err HandlerError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
+	code := err.Status()
+
+	switch code {
+	case http.StatusOK, http.StatusNoContent:
+		w.WriteHeader(http.StatusNoContent)
+		return nil
+	default:
+		return err
 	}
 }
