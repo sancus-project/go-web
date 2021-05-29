@@ -3,6 +3,8 @@ package errors
 import (
 	"net/http"
 	"strings"
+
+	"go.sancus.dev/web"
 )
 
 func NewError(code int, headers http.Header, body []byte) error {
@@ -32,5 +34,24 @@ func NewError(code int, headers http.Header, body []byte) error {
 			Code:    code,
 			Headers: headers,
 		}
+	}
+}
+
+func NewFromError(err error) error {
+	var code int
+
+	if err == nil {
+		return nil
+	} else if _, ok := err.(http.Handler); ok {
+		return err
+	} else if e, ok := err.(web.Error); ok {
+		code = e.Status()
+	} else {
+		code = http.StatusInternalServerError
+	}
+
+	return &HandlerError{
+		Code: code,
+		Err:  err,
 	}
 }
