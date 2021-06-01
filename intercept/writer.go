@@ -23,7 +23,7 @@ type WriteInterceptor struct {
 	headersWritten bool
 
 	rw       http.ResponseWriter // ResponseWriter wrapper
-	headers  http.Header         // Working copy of Headers
+	header   http.Header         // Working copy of Headers
 	original http.Header         // Original Headers table
 	err      web.Error
 }
@@ -35,8 +35,8 @@ func (m *WriteInterceptor) Writer() http.ResponseWriter {
 func (m *WriteInterceptor) Error() web.Error {
 	if !m.headersWritten {
 		return &errors.HandlerError{
-			Code:    http.StatusNoContent,
-			Headers: m.headers,
+			Code:   http.StatusNoContent,
+			Header: m.header,
 		}
 	}
 
@@ -44,7 +44,7 @@ func (m *WriteInterceptor) Error() web.Error {
 }
 
 func (m *WriteInterceptor) Header(original httpsnoop.HeaderFunc) http.Header {
-	return m.headers
+	return m.header
 }
 
 func (m *WriteInterceptor) Write(original httpsnoop.WriteFunc, b []byte) (int, error) {
@@ -77,7 +77,7 @@ func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code 
 		}
 
 		for k, _ := range m.original {
-			if w, ok := m.headers[k]; !ok {
+			if w, ok := m.header[k]; !ok {
 				// delete deleted headers
 				m.original.Del(k)
 			} else {
@@ -86,7 +86,7 @@ func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code 
 			}
 		}
 
-		for k, v := range m.headers {
+		for k, v := range m.header {
 			if _, ok := m.original[k]; !ok {
 				// add new headers
 				m.original[k] = v
@@ -98,8 +98,8 @@ func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code 
 	} else {
 		// record error for later return
 		m.err = &errors.HandlerError{
-			Code:    code,
-			Headers: m.headers,
+			Code:   code,
+			Header: m.header,
 		}
 
 		// and prevent any Write()
@@ -147,7 +147,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 	h := w.Header()
 	m := &WriteInterceptor{
 		original: h,
-		headers:  h.Clone(),
+		header:   h.Clone(),
 		mute:     mute,
 	}
 

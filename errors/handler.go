@@ -11,9 +11,9 @@ var (
 
 // Reference Handler error
 type HandlerError struct {
-	Code    int
-	Err     error
-	Headers http.Header
+	Code   int
+	Err    error
+	Header http.Header
 }
 
 func (err HandlerError) Status() int {
@@ -45,13 +45,13 @@ func (err HandlerError) Error() string {
 func (err HandlerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	code := err.Status()
 
-	if err.Headers != nil {
-		err.Headers.Del("Context-Type")
-		err.Headers.Del("X-Context-Type-Options")
+	if err.Header != nil {
+		err.Header.Del("Context-Type")
+		err.Header.Del("X-Context-Type-Options")
 
-		for k, v := range err.Headers {
+		for k, v := range err.Header {
 			for _, s := range v {
-				w.Header().Set(k, s)
+				w.Header().Add(k, s)
 			}
 		}
 	}

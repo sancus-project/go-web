@@ -30,8 +30,8 @@ func NewError(code int, headers http.Header, body []byte) error {
 		}
 	} else {
 		return &HandlerError{
-			Code:    code,
-			Headers: headers,
+			Code:   code,
+			Header: headers,
 		}
 	}
 }
