@@ -17,19 +17,18 @@ func NewError(code int, headers http.Header, body []byte) error {
 		return nil
 	}
 
-	switch code {
-	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther, http.StatusTemporaryRedirect, http.StatusPermanentRedirect:
+	if CodeIsRedirect(code) {
 		location := headers.Get("Location")
 		return &RedirectError{
 			location: location,
 			code:     code,
 		}
-	case http.StatusMethodNotAllowed:
+	} else if code == http.StatusMethodNotAllowed {
 		allowed := headers.Get("Allowed")
 		return &MethodNotAllowedError{
 			Allowed: strings.Split(allowed, ", "),
 		}
-	default:
+	} else {
 		return &HandlerError{
 			Code:    code,
 			Headers: headers,
@@ -38,20 +37,59 @@ func NewError(code int, headers http.Header, body []byte) error {
 }
 
 func NewFromError(err error) error {
-	var code int
 
-	if err == nil {
-		return nil
-	} else if _, ok := err.(http.Handler); ok {
-		return err
-	} else if e, ok := err.(web.Error); ok {
-		code = e.Status()
-	} else {
-		code = http.StatusInternalServerError
+	if err != nil {
+		var code int
+
+		switch v := err.(type) {
+		case http.Handler:
+			// if it can render itself it might know better
+			return err
+		case *PanicError, *HandlerError, *RedirectError:
+			// Ours
+			return err
+		case web.Error:
+			// Friedly
+			code = v.Status()
+
+			if CodeIsRedirect(code) {
+				// Redirect with `Header() http.Header` interface
+				if e, ok := err.(interface {
+					Header() http.Header
+				}); ok {
+					if loc := e.Header().Get("Location"); loc != "" {
+						//  Redirect
+						return &RedirectError{
+							location: loc,
+							code:     code,
+						}
+					}
+
+				}
+				// Redirect with `Location() string` interface
+				if e, ok := err.(interface {
+					Location() string
+				}); ok {
+					if loc := e.Location(); loc != "" {
+						// Redirect
+						return &RedirectError{
+							location: loc,
+							code:     code,
+						}
+					}
+				}
+			}
+			// fall through
+		default:
+			code = http.StatusInternalServerError
+		}
+
+		return &HandlerError{
+			Code: code,
+			Err:  err,
+		}
+
 	}
 
-	return &HandlerError{
-		Code: code,
-		Err:  err,
-	}
+	return nil
 }

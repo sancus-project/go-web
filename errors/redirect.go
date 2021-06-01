@@ -5,6 +5,15 @@ import (
 	"net/http"
 )
 
+func CodeIsRedirect(code int) bool {
+	switch code {
+	case http.StatusMovedPermanently, http.StatusFound, http.StatusSeeOther, http.StatusTemporaryRedirect, http.StatusPermanentRedirect:
+		return true
+	default:
+		return false
+	}
+}
+
 type RedirectError struct {
 	location string
 	code     int
