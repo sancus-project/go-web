@@ -3,6 +3,8 @@ package errors
 import (
 	"fmt"
 	"net/http"
+
+	"go.sancus.dev/web"
 )
 
 func CodeIsRedirect(code int) bool {
@@ -87,4 +89,65 @@ func NewTemporaryRedirect(location string) *RedirectError {
 // 308
 func NewPermanentRedirect(location string) *RedirectError {
 	return &RedirectError{location, http.StatusPermanentRedirect}
+}
+
+// Attempts to convert a given error into a RedirectError
+func AsRedirect(err error) (*RedirectError, bool) {
+
+	if err != nil {
+		switch v := err.(type) {
+		case *RedirectError:
+			// Ours, Redirect already
+			return v, true
+		case *PanicError:
+			// Ours, not Redirect
+			goto fail
+		case web.Error:
+			// Friedly
+			code := v.Status()
+
+			if !CodeIsRedirect(code) {
+				// Not a redirect
+				return nil, false
+			} else if e, ok := err.(*HandlerError); ok {
+				// check http.Header
+				if loc := e.Header.Get("Location"); loc != "" {
+					// Redirect
+					p := &RedirectError{
+						location: loc,
+						code:     code,
+					}
+					return p, true
+				}
+			} else if e, ok := err.(interface {
+				Header() http.Header
+			}); ok {
+				// Redirect with `Header() http.Header` interface
+				if loc := e.Header().Get("Location"); loc != "" {
+					//  Redirect
+					p := &RedirectError{
+						location: loc,
+						code:     code,
+					}
+					return p, true
+				}
+			} else if e, ok := err.(interface {
+				Location() string
+			}); ok {
+				// Redirect with `Location() string` interface
+				if loc := e.Location(); loc != "" {
+					// Redirect
+					p := &RedirectError{
+						location: loc,
+						code:     code,
+					}
+					return p, true
+				}
+			}
+		}
+		// fall through
+	}
+
+fail:
+	return nil, false
 }
