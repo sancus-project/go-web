@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+type StackTrace []Frame
+
 // Heavily based on github.com/pkg/errors.Frame
 type Frame struct {
 	pc    uintptr
@@ -87,6 +89,22 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	}
 }
 
+func (st StackTrace) Format(s fmt.State, verb rune) {
+
+	if s.Flag('#') {
+		l := len(st)
+		for i, f := range st {
+			fmt.Fprintf(s, "\n[%v/%v] ", i, l)
+			f.Format(s, verb)
+		}
+	} else {
+		for _, f := range st {
+			io.WriteString(s, "\n")
+			f.Format(s, verb)
+		}
+	}
+}
+
 func Here() *Frame {
 	const depth = 1
 	var pcs [depth]uintptr
@@ -97,6 +115,39 @@ func Here() *Frame {
 	}
 
 	return nil
+}
+
+func StackFrame(skip int) *Frame {
+	const depth = 32
+	var pcs [depth]uintptr
+
+	if n := runtime.Callers(2, pcs[:]); n > skip {
+		f := frameForPC(pcs[skip])
+		return &f
+	}
+
+	return nil
+}
+
+func BackTrace(skip int) StackTrace {
+	const depth = 32
+	var pcs [depth]uintptr
+	var st StackTrace
+
+	if n := runtime.Callers(2, pcs[:]); n > skip {
+		var frames []Frame
+
+		n = n - skip
+		frames = make([]Frame, 0, n)
+
+		for _, pc := range pcs[skip:n] {
+			frames = append(frames, frameForPC(pc))
+		}
+
+		st = StackTrace(frames)
+	}
+
+	return st
 }
 
 func funcname(name string) string {
