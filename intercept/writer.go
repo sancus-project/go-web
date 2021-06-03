@@ -63,7 +63,7 @@ func (m *WriteInterceptor) Write(original httpsnoop.WriteFunc, b []byte) (int, e
 
 func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code int) {
 	if m.headersWritten {
-		log.Fatal(errors.New("%+n(%v): %s", errors.Here(0), code, "Invalid Call"))
+		log.Fatal(errors.New("%+n(%v): %s", errors.Here(), code, "Invalid Call"))
 	}
 
 	m.headersWritten = true

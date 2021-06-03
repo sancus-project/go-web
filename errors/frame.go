@@ -9,28 +9,41 @@ import (
 	"strings"
 )
 
-type PC uintptr
-
-func (pc PC) pc() uintptr {
-	return uintptr(pc) - 1
-}
-
-func (pc PC) Func() *runtime.Func {
-	return runtime.FuncForPC(pc.pc())
-}
-
-func (pc PC) Name() string {
-	if fn := pc.Func(); fn != nil {
-		return fn.Name()
-	}
-	return "unknown"
-}
-
 // Heavily based on github.com/pkg/errors.Frame
 type Frame struct {
-	pc   PC
-	file string
-	line int
+	pc    uintptr
+	entry uintptr
+	name  string
+	file  string
+	line  int
+}
+
+func frameForPC(pc uintptr) Frame {
+	var entry uintptr
+	var name string
+	var file string
+	var line int
+
+	if fp := runtime.FuncForPC(pc - 1); fp != nil {
+		entry = fp.Entry()
+		name = fp.Name()
+		file, line = fp.FileLine(pc)
+	} else {
+		name = "unknown"
+		file = "unknown"
+	}
+
+	return Frame{
+		pc:    pc,
+		entry: entry,
+		name:  name,
+		file:  file,
+		line:  line,
+	}
+}
+
+func (f Frame) Name() string {
+	return f.name
 }
 
 // Format formats the frame according to the fmt.Formatter interface.
@@ -51,7 +64,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	case 's':
 		switch {
 		case s.Flag('+'):
-			io.WriteString(s, f.pc.Name())
+			io.WriteString(s, f.name)
 			io.WriteString(s, "\n\t")
 			io.WriteString(s, f.file)
 		default:
@@ -60,7 +73,7 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	case 'd':
 		io.WriteString(s, strconv.Itoa(f.line))
 	case 'n':
-		n := f.pc.Name()
+		n := f.name
 		switch {
 		case s.Flag('+'):
 			io.WriteString(s, n)
@@ -74,14 +87,15 @@ func (f Frame) Format(s fmt.State, verb rune) {
 	}
 }
 
-func Here(n int) *Frame {
-	if pc, file, line, ok := runtime.Caller(n + 1); ok {
-		return &Frame{
-			pc:   PC(pc),
-			file: file,
-			line: line,
-		}
+func Here() *Frame {
+	const depth = 1
+	var pcs [depth]uintptr
+
+	if n := runtime.Callers(2, pcs[:]); n > 0 {
+		f := frameForPC(pcs[0])
+		return &f
 	}
+
 	return nil
 }
 

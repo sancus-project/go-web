@@ -78,7 +78,7 @@ func (rctx *Context) Step(prefix string) *Context {
 		path = s
 	} else if n := strings.Index(rctx.RoutePath, prefix); n < 0 {
 		err := errors.New("%+n: prefix:%q incompatible (%#v)",
-			errors.Here(0), prefix, rctx)
+			errors.Here(), prefix, rctx)
 		log.Fatal(err)
 	} else {
 		// offset... resuming nested routing
@@ -89,7 +89,7 @@ func (rctx *Context) Step(prefix string) *Context {
 
 		if prefix+s != rctx.RoutePath {
 			err := errors.New("%+n: BUG: prefix:%q + path:%q != %q",
-				errors.Here(0), prefix, path, rctx.RoutePath)
+				errors.Here(), prefix, path, rctx.RoutePath)
 			log.Fatal(err)
 		}
 
