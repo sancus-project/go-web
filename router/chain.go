@@ -14,7 +14,11 @@ type Chain struct {
 
 // http.Handler
 func (m *Chain) Handle(path string, handler http.Handler) {
-	h := CompileChain(m.chain, handler)
+	handler = CompileChain(m.chain, handler)
+	h, ok := handler.(web.Handler)
+	if !ok {
+		h = intercept.Intercept(handler)
+	}
 	m.mux.TryHandle(path, h)
 }
 
@@ -40,21 +44,30 @@ func (m *Chain) With(f web.MiddlewareHandlerFunc) MiniRouter {
 	return m
 }
 
-func CompileChain(chain []web.MiddlewareHandlerFunc, h http.Handler) web.Handler {
+// Squash middleware chain
+func CompileChain(chain []web.MiddlewareHandlerFunc, h http.Handler) http.Handler {
 	l := len(chain)
 	for l > 0 {
 		l -= 1
 		h = chain[l](h)
 	}
-	return intercept.Intercept(h)
+	return h
 }
 
 func CompileTryChain(chain []web.MiddlewareHandlerFunc, h web.Handler) web.Handler {
 	l := len(chain)
 	if l > 0 {
-		// use fallback error handler to minimize writing
-		h2 := intercept.Resolve(h, nil)
-		h = CompileChain(chain, h2)
+		h2, ok := h.(http.Handler)
+		if !ok {
+			// use fallback error handler to minimize writing
+			h2 = intercept.Resolve(h, nil)
+		}
+		h2 = CompileChain(chain, h2)
+
+		h, ok = h2.(web.Handler)
+		if !ok {
+			h = intercept.Intercept(h2)
+		}
 	}
 
 	return h
