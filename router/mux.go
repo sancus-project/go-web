@@ -17,7 +17,7 @@ type Mux struct {
 	mu    sync.Mutex
 	chain []web.MiddlewareHandlerFunc
 	trie  *radix.Tree
-	entry web.Handler
+	entry Handler
 
 	errorHandler web.ErrorHandlerFunc
 }
@@ -77,23 +77,26 @@ func (m *Mux) Resolve(path string, rctx *context.Context) (web.Handler, *context
 
 // http.Handler
 func (m *Mux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if err := m.TryServeHTTP(w, r); err != nil {
-		m.errorHandler(w, r, err)
+	if m.entry == nil {
+		m.compile(nil)
 	}
+
+	m.entry.ServeHTTP(w, r)
 }
 
 func (m *Mux) Handle(path string, handler http.Handler) {
-	if handler != nil {
-		var h web.Handler
+	var h web.Handler
 
-		h, ok := handler.(web.Handler)
-		if !ok || h == nil {
+	if handler != nil {
+		var ok bool
+		h, ok = handler.(web.Handler)
+		if !ok {
 			h = intercept.Intercept(handler)
 		}
+	}
 
-		if err := m.TryHandle(path, h); err != nil {
-			log.Fatal(err)
-		}
+	if err := m.TryHandle(path, h); err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -121,8 +124,7 @@ func (m *Mux) tryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 
 func (m *Mux) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	if m.entry == nil {
-		// no handlers
-		return errors.ErrNotFound
+		m.compile(nil)
 	}
 
 	return m.entry.TryServeHTTP(w, r)
@@ -135,9 +137,7 @@ func (m *Mux) tryHandle(path string, handler web.Handler) error {
 
 func (m *Mux) TryHandle(path string, handler web.Handler) error {
 	if m.entry == nil {
-		// squash Use()ed middleware
-		h := web.HandlerFunc(m.tryServeHTTP)
-		m.entry = CompileTryChain(m.chain, h)
+		m.compileFunc(m.tryServeHTTP)
 	}
 
 	if handler != nil {

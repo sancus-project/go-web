@@ -6,10 +6,13 @@ import (
 	"go.sancus.dev/web"
 )
 
-type Router interface {
+type Handler interface {
 	http.Handler
 	web.Handler
+}
 
+type Router interface {
+	Handler
 	MiniRouter
 
 	Use(web.MiddlewareHandlerFunc) Router
