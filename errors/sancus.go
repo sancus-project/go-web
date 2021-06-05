@@ -1,16 +1,11 @@
 package errors
 
 import (
-	"errors"
-	"fmt"
+	"go.sancus.dev/core/errors"
 )
 
 func New(s string, args ...interface{}) error {
-	if len(args) > 0 {
-		return fmt.Errorf(s, args...)
-	}
-
-	return errors.New(s)
+	return errors.New(s, args...)
 }
 
 func Is(err, target error) bool {
@@ -23,4 +18,8 @@ func As(err error, target interface{}) bool {
 
 func Unwrap(err error) error {
 	return errors.Unwrap(err)
+}
+
+func Here() *errors.Frame {
+	return errors.StackFrame(1)
 }
