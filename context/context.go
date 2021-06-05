@@ -1,12 +1,12 @@
 package context
 
 import (
-	"context"
 	"log"
 	"path/filepath"
 	"strings"
 
-	"go.sancus.dev/web/errors"
+	"go.sancus.dev/core/context"
+	"go.sancus.dev/core/errors"
 )
 
 type Context struct {
@@ -162,14 +162,5 @@ func WithRouteContext(ctx context.Context, rctx *Context) context.Context {
 
 var (
 	// RouteCtxKey is the context.Context key to store the request context.
-	RouteCtxKey = &contextKey{"RouteContext"}
+	RouteCtxKey = context.NewContextKey("RouteContext")
 )
-
-// contextKey is a value for use with context.WithValue
-type contextKey struct {
-	name string
-}
-
-func (k *contextKey) String() string {
-	return "mix context value " + k.name
-}
