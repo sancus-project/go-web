@@ -18,7 +18,7 @@ func Intercept(h http.Handler) web.Handler {
 	return nil
 }
 
-func (m *Interceptor) tryServeHTTP(w http.ResponseWriter, r *http.Request, out **errors.PanicError) {
+func (m *Interceptor) tryServeHTTP(w http.ResponseWriter, r *http.Request, out *errors.Panic) {
 	defer func() {
 		if err := errors.Recover(); err != nil {
 			*out = err
@@ -29,14 +29,14 @@ func (m *Interceptor) tryServeHTTP(w http.ResponseWriter, r *http.Request, out *
 }
 
 func (m *Interceptor) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	var pee *errors.PanicError
+	var pee errors.Panic
 
 	w2 := NewWriter(w, r.Method)
 	m.tryServeHTTP(w2.Writer(), r, &pee)
 
 	// panic?
 	if pee != nil {
-		if err, ok := pee.Unwrap().(web.Error); ok && err != nil {
+		if err, ok := errors.Unwrap(pee).(web.Error); ok && err != nil {
 			// return wrapped web.Error
 			return err
 		} else {

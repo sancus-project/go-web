@@ -6,6 +6,7 @@ import (
 
 type (
 	Frame = errors.Frame
+	Panic = errors.Panic
 	Stack = errors.Stack
 )
 
