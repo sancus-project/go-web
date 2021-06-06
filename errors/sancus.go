@@ -20,6 +20,15 @@ func Unwrap(err error) error {
 	return errors.Unwrap(err)
 }
 
+// errors.Frame
 func Here() *errors.Frame {
 	return errors.StackFrame(1)
+}
+
+func StackFrame(skip int) *errors.Frame {
+	return errors.StackFrame(skip + 1)
+}
+
+func BackTrace(skip int) errors.Stack {
+	return errors.BackTrace(skip + 1)
 }
