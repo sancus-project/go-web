@@ -4,6 +4,11 @@ import (
 	"go.sancus.dev/core/errors"
 )
 
+type (
+	Frame = errors.Frame
+	Stack = errors.Stack
+)
+
 func New(s string, args ...interface{}) error {
 	return errors.New(s, args...)
 }
@@ -31,4 +36,8 @@ func StackFrame(skip int) *errors.Frame {
 
 func BackTrace(skip int) errors.Stack {
 	return errors.BackTrace(skip + 1)
+}
+
+func StackTrace(err error) errors.Stack {
+	return errors.StackTrace(err)
 }
