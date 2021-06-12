@@ -36,6 +36,25 @@ func NewError(code int, headers http.Header, body []byte) error {
 	}
 }
 
+func AsWebError(err error) web.Error {
+	var p web.Error
+	var ok bool
+
+	if err == nil {
+		// Ignore
+	} else if p, ok = err.(web.Error); ok {
+		// Ready
+	} else {
+		// Wrap
+		p = &HandlerError{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+		}
+	}
+
+	return p
+}
+
 func NewFromError(err error) error {
 
 	if err == nil {

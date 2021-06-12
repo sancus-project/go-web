@@ -29,6 +29,12 @@ func HandleMiddlewareError(w http.ResponseWriter, r *http.Request, err error, ne
 			}
 		}
 
+		// return via Context?
+		if out := ErrorContext(r.Context()); out != nil {
+			*out = AsWebError(err)
+			return
+		}
+
 		// does the error know how to render itself?
 		h, ok := err.(http.Handler)
 		if !ok || h == nil {
