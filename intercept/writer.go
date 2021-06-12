@@ -2,6 +2,7 @@ package intercept
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"log"
 	"net"
@@ -18,14 +19,15 @@ var (
 )
 
 type WriteInterceptor struct {
+	buffer         bytes.Buffer
 	code           int
 	mute           bool
+	capture        bool
 	headersWritten bool
 
 	rw       http.ResponseWriter // ResponseWriter wrapper
 	header   http.Header         // Working copy of Headers
 	original http.Header         // Original Headers table
-	err      web.Error
 }
 
 func (m *WriteInterceptor) Writer() http.ResponseWriter {
@@ -40,7 +42,7 @@ func (m *WriteInterceptor) Error() web.Error {
 		}
 	}
 
-	return m.err
+	return errors.NewWebError(m.code, m.header, m.buffer.Bytes())
 }
 
 func (m *WriteInterceptor) Header(original httpsnoop.HeaderFunc) http.Header {
@@ -52,12 +54,15 @@ func (m *WriteInterceptor) Write(original httpsnoop.WriteFunc, b []byte) (int, e
 		m.rw.WriteHeader(http.StatusOK)
 	}
 
-	if !m.mute {
-		// real
-		return original(b)
-	} else {
+	if m.capture {
+		// buffer
+		return m.buffer.Write(b)
+	} else if m.mute {
 		// fake
 		return len(b), nil
+	} else {
+		// real
+		return original(b)
 	}
 }
 
@@ -96,14 +101,8 @@ func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code 
 		original(code)
 
 	} else {
-		// record error for later return
-		m.err = &errors.HandlerError{
-			Code:   code,
-			Header: m.header,
-		}
-
-		// and prevent any Write()
-		m.mute = true
+		// capture writes for later review
+		m.capture = true
 	}
 }
 

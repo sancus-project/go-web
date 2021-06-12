@@ -8,6 +8,10 @@ import (
 )
 
 func NewError(code int, headers http.Header, body []byte) error {
+	return NewWebError(code, headers, body)
+}
+
+func NewWebError(code int, headers http.Header, body []byte) web.Error {
 
 	if code < 100 {
 		// 500
