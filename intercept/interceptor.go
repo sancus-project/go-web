@@ -30,9 +30,15 @@ func (m *Interceptor) tryServeHTTP(w http.ResponseWriter, r *http.Request, out *
 
 func (m *Interceptor) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	var pee errors.Panic
+	var err web.Error
 
-	w2 := NewWriter(w, r.Method)
-	m.tryServeHTTP(w2.Writer(), r, &pee)
+	// error context and intercept.Writer
+	ctx := errors.WithErrorContext(r.Context(), &err)
+	r2 := r.WithContext(ctx)
+	w2 := NewWriter(w, r2.Method)
+
+	// try/recover
+	m.tryServeHTTP(w2.Writer(), r2, &pee)
 
 	// panic?
 	if pee != nil {
@@ -45,6 +51,10 @@ func (m *Interceptor) TryServeHTTP(w http.ResponseWriter, r *http.Request) error
 		}
 	}
 
-	// the web.Error from the Writer
-	return w2.Error()
+	if err != nil {
+		// no error via context, ask the Writer
+		err = w2.Error()
+	}
+
+	return err
 }
