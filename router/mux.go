@@ -137,7 +137,7 @@ func (m *Mux) tryHandle(path string, handler web.Handler) error {
 
 func (m *Mux) TryHandle(path string, handler web.Handler) error {
 	if m.entry == nil {
-		m.compileFunc(m.tryServeHTTP)
+		m.compile(m.tryServeHTTP)
 	}
 
 	if handler != nil {
