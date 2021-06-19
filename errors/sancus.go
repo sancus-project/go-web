@@ -5,9 +5,10 @@ import (
 )
 
 type (
-	Frame = errors.Frame
-	Panic = errors.Panic
-	Stack = errors.Stack
+	Frame     = errors.Frame
+	Panic     = errors.Panic
+	Stack     = errors.Stack
+	Validator = errors.Validator
 )
 
 func New(s string, args ...interface{}) error {
@@ -41,4 +42,9 @@ func BackTrace(skip int) errors.Stack {
 
 func StackTrace(err error) errors.Stack {
 	return errors.StackTrace(err)
+}
+
+// errors.Validator
+func AsValidator(err error) (errors.Validator, bool) {
+	return errors.AsValidator(err)
 }
