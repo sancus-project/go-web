@@ -3,7 +3,6 @@ package router
 import (
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/armon/go-radix"
 
@@ -14,7 +13,6 @@ import (
 )
 
 type Mux struct {
-	mu    sync.Mutex
 	chain []web.MiddlewareHandlerFunc
 	trie  *radix.Tree
 	entry Handler
@@ -56,9 +54,6 @@ func (m *Mux) resolve(v interface{}, rctx *context.Context, prefix, path string)
 }
 
 func (m *Mux) Resolve(path string, rctx *context.Context) (web.Handler, *context.Context, bool) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	if s, v, ok := m.trie.LongestPrefix(path); ok {
 		if s == path {
 			return m.resolve(v, rctx, s, "")

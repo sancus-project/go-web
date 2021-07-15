@@ -84,9 +84,6 @@ func (h entry) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (m *Mux) compile(h web.HandlerFunc) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	if m.entry == nil {
 
 		if h == nil {
