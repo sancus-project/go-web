@@ -62,6 +62,13 @@ fail:
 	return "", "", nil
 }
 
+func (m *Mux) findHandler(path string) web.Handler {
+	if _, s1, h := m.findBestNode(path); len(s1) == 0 {
+		return h
+	}
+	return nil
+}
+
 func (m *Mux) resolve(h web.Handler, rctx *context.Context, prefix, path string) (web.Handler, *context.Context, bool) {
 	if rctx != nil {
 		rctx = rctx.Step(prefix)
