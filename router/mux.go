@@ -39,35 +39,45 @@ func (m *Mux) GetRoutePath(r *http.Request) string {
 	}
 }
 
-func (m *Mux) resolve(v interface{}, rctx *context.Context, prefix, path string) (web.Handler, *context.Context, bool) {
-	if h, ok := v.(web.Handler); ok {
+func (m *Mux) findBestNode(path string) (string, string, web.Handler) {
+	if s, v, ok := m.trie.LongestPrefix(path); !ok {
+		goto fail
+	} else if h, ok := v.(web.Handler); !ok {
+		goto fail
+	} else {
 
-		if rctx != nil {
-			rctx = rctx.Step(prefix)
-		} else {
-			rctx = context.NewRouteContext(prefix, path)
-		}
-
-		return h, rctx, true
-	}
-	return nil, nil, false
-}
-
-func (m *Mux) Resolve(path string, rctx *context.Context) (web.Handler, *context.Context, bool) {
-	if s, v, ok := m.trie.LongestPrefix(path); ok {
 		if s == path {
-			return m.resolve(v, rctx, s, "")
+			return s, "", h
 		}
 
 		l := len(s)
 		if s[l-1] == '/' {
-			return m.resolve(v, rctx, s, path[l-1:])
+			return s, path[l-1:], h
 		} else if path[l] == '/' {
-			return m.resolve(v, rctx, s, path[l:])
+			return s, path[l:], h
 		}
 	}
 
-	return nil, nil, false
+fail:
+	return "", "", nil
+}
+
+func (m *Mux) resolve(h web.Handler, rctx *context.Context, prefix, path string) (web.Handler, *context.Context, bool) {
+	if rctx != nil {
+		rctx = rctx.Step(prefix)
+	} else {
+		rctx = context.NewRouteContext(prefix, path)
+	}
+
+	return h, rctx, true
+}
+
+func (m *Mux) Resolve(path string, rctx *context.Context) (web.Handler, *context.Context, bool) {
+	if s0, s1, h := m.findBestNode(path); h != nil {
+		return m.resolve(h, rctx, s0, s1)
+	} else {
+		return nil, nil, false
+	}
 }
 
 // http.Handler
