@@ -90,9 +90,7 @@ func (m *Mux) Handle(path string, handler http.Handler) {
 		}
 	}
 
-	if err := m.TryHandle(path, h); err != nil {
-		log.Fatal(err)
-	}
+	m.TryHandle(path, h)
 }
 
 func (m *Mux) HandleFunc(path string, handler http.HandlerFunc) {
@@ -125,25 +123,22 @@ func (m *Mux) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	return m.entry.TryServeHTTP(w, r)
 }
 
-func (m *Mux) tryHandle(path string, handler web.Handler) error {
-	m.trie.Insert(path, handler)
-	return nil
-}
-
-func (m *Mux) TryHandle(path string, handler web.Handler) error {
+func (m *Mux) tryHandle(path string, handler web.Handler) {
 	if m.entry == nil {
 		m.compile(m.tryServeHTTP)
 	}
 
 	if handler != nil {
-		return m.tryHandle(path, handler)
+		m.trie.Insert(path, handler)
 	}
-
-	return nil
 }
 
-func (m *Mux) TryHandleFunc(path string, handler web.HandlerFunc) error {
-	return m.TryHandle(path, handler)
+func (m *Mux) TryHandle(path string, handler web.Handler) {
+	m.tryHandle(path, handler)
+}
+
+func (m *Mux) TryHandleFunc(path string, handler web.HandlerFunc) {
+	m.tryHandle(path, handler)
 }
 
 // web.MiddlewareHandlerFunc

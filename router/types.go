@@ -22,8 +22,8 @@ type MiniRouter interface {
 	Handle(path string, handler http.Handler)
 	HandleFunc(path string, handler http.HandlerFunc)
 
-	TryHandle(path string, handler web.Handler) error
-	TryHandleFunc(path string, handler web.HandlerFunc) error
+	TryHandle(path string, handler web.Handler)
+	TryHandleFunc(path string, handler web.HandlerFunc)
 
 	With(web.MiddlewareHandlerFunc) MiniRouter
 }

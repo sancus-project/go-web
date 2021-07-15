@@ -28,13 +28,13 @@ func (m *Chain) HandleFunc(path string, handler http.HandlerFunc) {
 }
 
 // web.Handler
-func (m *Chain) TryHandle(path string, handler web.Handler) error {
+func (m *Chain) TryHandle(path string, handler web.Handler) {
 	h := CompileTryChain(m.chain, handler)
-	return m.mux.TryHandle(path, h)
+	m.mux.TryHandle(path, h)
 }
 
-func (m *Chain) TryHandleFunc(path string, handler web.HandlerFunc) error {
-	return m.TryHandle(path, handler)
+func (m *Chain) TryHandleFunc(path string, handler web.HandlerFunc) {
+	m.TryHandle(path, handler)
 }
 
 // web.MiddlewareHandlerFunc
