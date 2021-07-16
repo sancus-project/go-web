@@ -45,11 +45,7 @@ func (m *WriteInterceptor) Error() web.Error {
 	return errors.NewWebError(m.code, m.header, m.buffer.Bytes())
 }
 
-func (m *WriteInterceptor) Header(original httpsnoop.HeaderFunc) http.Header {
-	return m.header
-}
-
-func (m *WriteInterceptor) Write(original httpsnoop.WriteFunc, b []byte) (int, error) {
+func (m *WriteInterceptor) write(original httpsnoop.WriteFunc, b []byte) (int, error) {
 	if !m.headersWritten {
 		m.rw.WriteHeader(http.StatusOK)
 	}
@@ -66,7 +62,7 @@ func (m *WriteInterceptor) Write(original httpsnoop.WriteFunc, b []byte) (int, e
 	}
 }
 
-func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code int) {
+func (m *WriteInterceptor) writeHeader(original httpsnoop.WriteHeaderFunc, code int) {
 	if m.headersWritten {
 		log.Fatal(errors.New("%+n(%v): %s", errors.Here(), code, "Invalid Call"))
 	}
@@ -106,35 +102,6 @@ func (m *WriteInterceptor) WriteHeader(original httpsnoop.WriteHeaderFunc, code 
 	}
 }
 
-func (m *WriteInterceptor) Flush(original httpsnoop.FlushFunc) {
-	err := ErrNotImplemented
-	log.Fatal(err)
-}
-
-func (m *WriteInterceptor) CloseNotify(original httpsnoop.CloseNotifyFunc) <-chan bool {
-	err := ErrNotImplemented
-	log.Fatal(err)
-	return nil
-}
-
-func (m *WriteInterceptor) Hijack(original httpsnoop.HijackFunc) (net.Conn, *bufio.ReadWriter, error) {
-	err := ErrNotImplemented
-	log.Fatal(err)
-	return nil, nil, err
-}
-
-func (m *WriteInterceptor) ReadFrom(original httpsnoop.ReadFromFunc, src io.Reader) (int64, error) {
-	err := ErrNotImplemented
-	log.Fatal(err)
-	return 0, err
-}
-
-func (m *WriteInterceptor) Push(original httpsnoop.PushFunc, target string, opts *http.PushOptions) error {
-	err := ErrNotImplemented
-	log.Fatal(err)
-	return err
-}
-
 func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 	var mute bool
@@ -153,49 +120,58 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 	hooks := httpsnoop.Hooks{
 		Header: func(original httpsnoop.HeaderFunc) httpsnoop.HeaderFunc {
 			return func() http.Header {
-				return m.Header(original)
+				return m.header
 			}
 		},
 
 		WriteHeader: func(original httpsnoop.WriteHeaderFunc) httpsnoop.WriteHeaderFunc {
 			return func(code int) {
-				m.WriteHeader(original, code)
+				m.writeHeader(original, code)
 			}
 		},
 
 		Write: func(original httpsnoop.WriteFunc) httpsnoop.WriteFunc {
 			return func(b []byte) (int, error) {
-				return m.Write(original, b)
+				return m.write(original, b)
 			}
 		},
 
 		Flush: func(original httpsnoop.FlushFunc) httpsnoop.FlushFunc {
 			return func() {
-				m.Flush(original)
+				err := ErrNotImplemented
+				log.Fatal(err)
 			}
 		},
 
 		CloseNotify: func(original httpsnoop.CloseNotifyFunc) httpsnoop.CloseNotifyFunc {
 			return func() <-chan bool {
-				return m.CloseNotify(original)
+				err := ErrNotImplemented
+				log.Fatal(err)
+				return nil
 			}
 		},
 
 		Hijack: func(original httpsnoop.HijackFunc) httpsnoop.HijackFunc {
 			return func() (net.Conn, *bufio.ReadWriter, error) {
-				return m.Hijack(original)
+				err := ErrNotImplemented
+				log.Fatal(err)
+				return nil, nil, err
 			}
 		},
 
 		ReadFrom: func(original httpsnoop.ReadFromFunc) httpsnoop.ReadFromFunc {
 			return func(src io.Reader) (int64, error) {
-				return m.ReadFrom(original, src)
+				err := ErrNotImplemented
+				log.Fatal(err)
+				return 0, err
 			}
 		},
 
 		Push: func(original httpsnoop.PushFunc) httpsnoop.PushFunc {
 			return func(target string, opts *http.PushOptions) error {
-				return m.Push(original, target, opts)
+				err := ErrNotImplemented
+				log.Fatal(err)
+				return err
 			}
 		},
 	}
