@@ -54,7 +54,7 @@ func (m *MethodHandler) Options(w http.ResponseWriter, r *http.Request) error {
 		m.allowed = allowed
 	}
 
-	if err := errors.MethodNotAllowed(r.Method, allowed); err.Method == "OPTIONS" {
+	if err := errors.MethodNotAllowed(r.Method, allowed...); err.Method == "OPTIONS" {
 		// render
 		err.ServeHTTP(w, r)
 		return nil
