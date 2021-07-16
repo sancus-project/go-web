@@ -12,12 +12,11 @@ type MethodNotAllowedError struct {
 	Allowed []string
 }
 
-func MethodNotAllowed(method string, allowed ...string) web.Error {
-	err := &MethodNotAllowedError{
-		Method:  method,
+func MethodNotAllowed(method string, allowed ...string) *MethodNotAllowedError {
+	return &MethodNotAllowedError{
+		Method:  strings.ToUpper(method),
 		Allowed: allowed,
 	}
-	return err
 }
 
 func (err *MethodNotAllowedError) Status() int {
