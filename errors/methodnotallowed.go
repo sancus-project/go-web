@@ -3,8 +3,6 @@ package errors
 import (
 	"net/http"
 	"strings"
-
-	"go.sancus.dev/web"
 )
 
 type MethodNotAllowedError struct {
