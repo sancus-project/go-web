@@ -102,6 +102,10 @@ func (m *WriteInterceptor) writeHeader(original httpsnoop.WriteHeaderFunc, code 
 	}
 }
 
+func (m *WriteInterceptor) closeNotify(original httpsnoop.CloseNotifyFunc) <-chan bool {
+	return original()
+}
+
 func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 	var mute bool
@@ -145,9 +149,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		CloseNotify: func(original httpsnoop.CloseNotifyFunc) httpsnoop.CloseNotifyFunc {
 			return func() <-chan bool {
-				err := ErrNotImplemented
-				log.Fatal(err)
-				return nil
+				return m.closeNotify(original)
 			}
 		},
 
