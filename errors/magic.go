@@ -59,6 +59,7 @@ func AsWebError(err error) web.Error {
 	return p
 }
 
+// Returns http.Handler capable web.Error
 func NewFromError(err error) error {
 
 	if err == nil {
@@ -74,9 +75,6 @@ func NewFromError(err error) error {
 	switch v := err.(type) {
 	case http.Handler:
 		// if it can render itself it might know better
-		goto done
-	case *PanicError, *HandlerError, *RedirectError:
-		// Ours
 		goto done
 	case web.Error:
 		// Friedly
