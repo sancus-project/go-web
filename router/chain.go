@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"go.sancus.dev/web"
-	"go.sancus.dev/web/errors"
 	"go.sancus.dev/web/intercept"
 )
 
@@ -70,46 +69,8 @@ func CompileTryChain(chain []web.MiddlewareHandlerFunc, h web.Handler) web.Handl
 }
 
 // Entry handlers
-type entry struct {
-	h1 web.Handler
-	h2 http.Handler
-}
-
-func (h entry) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.h2.ServeHTTP(w, r)
-}
-
-func (h entry) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	return h.h1.TryServeHTTP(w, r)
-}
-
 func (m *Mux) compile(h web.HandlerFunc) {
 	if m.entry == nil {
-
-		if h == nil {
-			// No handler defined, but we still want to process the middleware
-			f := func(w http.ResponseWriter, r *http.Request) error {
-				return errors.ErrNotFound
-			}
-
-			h = web.HandlerFunc(f)
-		}
-
-		m.entry = newEntry(m.chain, h, m.errorHandler)
+		m.entry = NewHandler(h, m.chain, m.errorHandler)
 	}
-}
-
-func newEntry(chain []web.MiddlewareHandlerFunc, h web.Handler, eh web.ErrorHandlerFunc) Handler {
-	var h2 http.Handler
-
-	if len(chain) > 0 {
-		// got a middleware chain we have to process before
-		// calling the error handler
-		h2 = compileChain(chain, h, eh)
-		h = intercept.Intercept(h2)
-	} else {
-		// no middleware chain, only add resolver for standard handler
-		h2 = intercept.Resolve(h, eh)
-	}
-	return entry{h, h2}
 }
