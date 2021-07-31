@@ -47,12 +47,14 @@ func (n *entry) use(f web.MiddlewareHandlerFunc) {
 type rawNode struct {
 	h     web.Handler
 	node  *node
+	mux   *Mux
 	chain []web.MiddlewareHandlerFunc
 }
 
 func (n *node) initRaw(mux *Mux) {
 	n.Handler = &rawNode{
 		node: n,
+		mux:  mux,
 	}
 }
 
@@ -98,6 +100,20 @@ func (n *rawNode) tryMethod(method string, h web.Handler) {
 
 func (n *rawNode) with(chain ...web.MiddlewareHandlerFunc) {
 	n.chain = chain
+}
+
+func (n *rawNode) route(fn func(Router)) Router {
+	r := NewRouter(n.mux.errorHandler)
+	for _, f := range n.chain {
+		r.Use(f)
+	}
+
+	if fn != nil {
+		fn(r)
+	}
+
+	n.h = r
+	return r
 }
 
 func (_ rawNode) asHandler(h2 http.Handler) web.Handler {

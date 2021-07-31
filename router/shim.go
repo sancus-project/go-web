@@ -44,6 +44,10 @@ func (r *router) TryMethodFunc(method string, path string, h web.HandlerFunc) {
 	r.getNode(path).tryMethod(method, h)
 }
 
+func (r *router) Route(path string, fn func(Router)) Router {
+	return r.getNode(path).route(fn)
+}
+
 // just a node on the trie but allowing it to
 // migrate between raw and ready states
 type node struct {
@@ -102,5 +106,16 @@ func (n *node) with(middleware ...web.MiddlewareHandlerFunc) {
 		v.with(middleware...)
 	} else {
 		n.toolate("With")
+	}
+}
+
+func (n *node) route(fn func(Router)) Router {
+	if v, ok := n.Handler.(interface {
+		route(func(Router)) Router
+	}); ok {
+		return v.route(fn)
+	} else {
+		n.toolate("Route")
+		return nil // not reached.
 	}
 }

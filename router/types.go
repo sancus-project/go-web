@@ -32,4 +32,6 @@ type MiniRouter interface {
 	TryMethodFunc(method string, path string, handler web.HandlerFunc)
 
 	With(web.MiddlewareHandlerFunc) MiniRouter
+
+	Route(path string, fn func(Router)) Router
 }
