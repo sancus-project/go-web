@@ -30,17 +30,19 @@ func (err *MethodNotAllowedError) Error() string {
 }
 
 func (err *MethodNotAllowedError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := err.Status()
+	method := strings.ToUpper(r.Method)
 
 	w.Header().Set("Allow", strings.Join(err.Allowed, ", "))
 
-	if err.Method == "OPTIONS" || code == http.StatusNoContent {
+	if method == "OPTIONS" {
 		w.WriteHeader(http.StatusNoContent)
 	} else {
+		code := http.StatusMethodNotAllowed
+
 		http.Error(w, ErrorText(code), code)
 	}
 }
 
 func (err *MethodNotAllowedError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	return err
+	return MethodNotAllowed(r.Method, err.Allowed...)
 }
