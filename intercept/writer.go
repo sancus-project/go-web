@@ -77,7 +77,7 @@ func (m *WriteInterceptor) writeHeader(original httpsnoop.WriteHeaderFunc, code 
 			m.mute = true
 		}
 
-		for k, _ := range m.original {
+		for k := range m.original {
 			if w, ok := m.header[k]; !ok {
 				// delete deleted headers
 				m.original.Del(k)
