@@ -7,36 +7,61 @@ import (
 
 	"go.sancus.dev/web"
 	"go.sancus.dev/web/errors"
-	"go.sancus.dev/web/intercept"
 )
 
 type MethodHandler struct {
 	handler map[string]web.Handler
-	allowed []string
 }
 
-func (m *MethodHandler) init() {
-	m.handler = make(map[string]web.Handler, 2)
+func NewMethodHandler(fallback web.Handler) *MethodHandler {
+	m := &MethodHandler{}
+
+	if fallback != nil {
+		m.set("*", fallback)
+	}
+
+	return m
 }
 
 func (m *MethodHandler) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	if h, ok := m.handler[strings.ToUpper(r.Method)]; ok {
-		return h.TryServeHTTP(w, r)
+	var err error
+
+	method := strings.ToUpper(r.Method)
+
+	if h, ok := m.handler[method]; ok {
+		err = h.TryServeHTTP(w, r)
 	} else if h, ok := m.handler["*"]; ok {
-		return h.TryServeHTTP(w, r)
+		err = h.TryServeHTTP(w, r)
 	} else {
-		return m.Options(w, r)
+		err = m.MethodNotAllowed(r)
 	}
+
+	if wee := errors.NewFromError(err); wee == nil {
+		return wee
+	}
+	return nil
 }
 
-func (m *MethodHandler) Options(w http.ResponseWriter, r *http.Request) error {
-	allowed := m.allowed
+func (m *MethodHandler) MethodNotAllowed(r *http.Request) error {
+	var allowed []string
 
-	if allowed == nil {
-		// memoize
-		allowed = make([]string, 0, len(m.handler))
-		for k, _ := range m.handler {
-			if k != "*" {
+	// this method could be called in parallel, so we
+	// play it safe and try to avoid to get "OPTIONS"
+	// duplicated
+	h := m.handler["OPTIONS"]
+
+	if v, ok := h.(*errors.MethodNotAllowedError); ok {
+		allowed = v.Allowed
+	} else if v, ok := h.(interface {
+		Methods() []string
+	}); ok {
+		allowed = v.Methods()
+	} else {
+		allowed = make([]string, 0, len(m.handler)+1)
+		allowed = append(allowed, "OPTIONS")
+
+		for k := range m.handler {
+			if k != "*" && k != "OPTIONS" {
 				allowed = append(allowed, k)
 			}
 		}
@@ -50,34 +75,27 @@ func (m *MethodHandler) Options(w http.ResponseWriter, r *http.Request) error {
 				}
 			}
 		}
+
 		sort.Strings(allowed)
-		m.allowed = allowed
 	}
 
-	if err := errors.MethodNotAllowed(r.Method, allowed...); err.Method == "OPTIONS" {
-		// render
-		err.ServeHTTP(w, r)
-		return nil
-	} else {
-		// Method Not Allowed
-		return err
+	v := errors.MethodNotAllowed(r.Method, allowed...)
+	if h == nil {
+		// memoize
+		m.handler["OPTIONS"] = v
 	}
+
+	return v
 }
 
-func (m *MethodHandler) Method(method string, h http.Handler) {
-	h2, ok := h.(web.Handler)
-	if !ok {
-		h2 = intercept.Intercept(h)
-	}
-	m.TryMethod(method, h2)
-}
-
-func (m *MethodHandler) TryMethod(method string, h web.Handler) {
+func (m *MethodHandler) set(method string, h0 web.Handler, chain ...web.MiddlewareHandlerFunc) {
 	if m.handler == nil {
-		m.init()
+		m.handler = make(map[string]web.Handler, 2)
 	}
 
-	if h != nil {
+	if h0 != nil {
+		h := NewHandler(h0, chain, nil)
+
 		method = strings.ToUpper(method)
 		m.handler[method] = h
 		if method == "GET" {
@@ -86,70 +104,4 @@ func (m *MethodHandler) TryMethod(method string, h web.Handler) {
 			}
 		}
 	}
-}
-
-//
-// Add Method Handler to Router
-//
-func (m *Mux) getMethodHandler(path string, chain ...web.MiddlewareHandlerFunc) *MethodHandler {
-	var h *MethodHandler
-
-	if h2 := m.findHandler(path); h2 != nil {
-		var ok bool
-
-		// node exists
-		h, ok = h2.(*MethodHandler)
-		if !ok {
-			// but not a MethodHandler, wrap it
-			h = &MethodHandler{}
-			h.TryMethod("*", h2)
-
-			m.tryHandle(path, CompileTryChain(chain, h))
-		}
-	} else {
-		// new node
-		h = &MethodHandler{}
-		m.tryHandle(path, CompileTryChain(chain, h))
-	}
-
-	return h
-}
-
-func (m *Mux) Method(method string, path string, h http.Handler) {
-	m.getMethodHandler(path).Method(method, h)
-}
-
-func (m *Mux) MethodFunc(method string, path string, h http.HandlerFunc) {
-	m.getMethodHandler(path).Method(method, h)
-}
-
-func (m *Mux) TryMethod(method string, path string, h web.Handler) {
-	m.getMethodHandler(path).TryMethod(method, h)
-}
-
-func (m *Mux) TryMethodFunc(method string, path string, h web.HandlerFunc) {
-	m.getMethodHandler(path).TryMethod(method, h)
-}
-
-//
-// Add Method Handler to Chain
-//
-func (m *Chain) getMethodHandler(path string) *MethodHandler {
-	return m.mux.getMethodHandler(path, m.chain...)
-}
-
-func (m *Chain) Method(method string, path string, h http.Handler) {
-	m.getMethodHandler(path).Method(method, h)
-}
-
-func (m *Chain) TryMethod(method string, path string, h web.Handler) {
-	m.getMethodHandler(path).TryMethod(method, h)
-}
-
-func (m *Chain) MethodFunc(method string, path string, h http.HandlerFunc) {
-	m.getMethodHandler(path).Method(method, h)
-}
-
-func (m *Chain) TryMethodFunc(method string, path string, h web.HandlerFunc) {
-	m.getMethodHandler(path).TryMethod(method, h)
 }

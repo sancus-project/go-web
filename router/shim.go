@@ -94,3 +94,13 @@ func (n *node) tryMethod(method string, h web.Handler) {
 		n.toolate("TryMethod")
 	}
 }
+
+func (n *node) with(middleware ...web.MiddlewareHandlerFunc) {
+	if v, ok := n.Handler.(interface {
+		with(...web.MiddlewareHandlerFunc)
+	}); ok {
+		v.with(middleware...)
+	} else {
+		n.toolate("With")
+	}
+}

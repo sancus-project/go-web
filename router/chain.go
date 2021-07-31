@@ -8,38 +8,29 @@ import (
 )
 
 type Chain struct {
+	router
+
 	mux   *Mux
 	chain []web.MiddlewareHandlerFunc
 }
 
-// http.Handler
-func (m *Chain) Handle(path string, handler http.Handler) {
-	handler = CompileChain(m.chain, handler)
-	h, ok := handler.(web.Handler)
-	if !ok {
-		h = intercept.Intercept(handler)
-	}
-	m.mux.TryHandle(path, h)
+func (m *Chain) init(mux *Mux) {
+	m.mux = mux
+	m.router.getNode = m.getNode
 }
 
-func (m *Chain) HandleFunc(path string, handler http.HandlerFunc) {
-	m.Handle(path, handler)
+func (m *Chain) getNode(path string) *node {
+	n := m.mux.getNode(path)
+	n.with(m.chain...)
+	return n
 }
 
-// web.Handler
-func (m *Chain) TryHandle(path string, handler web.Handler) {
-	h := CompileTryChain(m.chain, handler)
-	m.mux.TryHandle(path, h)
-}
-
-func (m *Chain) TryHandleFunc(path string, handler web.HandlerFunc) {
-	m.TryHandle(path, handler)
-}
-
-// web.MiddlewareHandlerFunc
 func (m *Chain) With(f web.MiddlewareHandlerFunc) MiniRouter {
 	if f != nil {
-		m.chain = append(m.chain, f)
+		m2 := &Chain{
+			chain: append(m.chain, f),
+		}
+		m2.init(m.mux)
 	}
 	return m
 }
@@ -66,11 +57,4 @@ func CompileTryChain(chain []web.MiddlewareHandlerFunc, h web.Handler) web.Handl
 	}
 
 	return h
-}
-
-// Entry handlers
-func (m *Mux) compile(h web.HandlerFunc) {
-	if m.entry == nil {
-		m.entry = NewHandler(h, m.chain, m.errorHandler)
-	}
 }
