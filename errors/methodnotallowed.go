@@ -29,6 +29,10 @@ func (err *MethodNotAllowedError) Error() string {
 	return ErrorText(err.Status())
 }
 
+func (err *MethodNotAllowedError) Methods() []string {
+	return err.Allowed
+}
+
 func (err *MethodNotAllowedError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	method := strings.ToUpper(r.Method)
 
