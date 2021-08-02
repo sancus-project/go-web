@@ -49,6 +49,8 @@ func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc, check ContextChe
 	if check == nil {
 		if p, ok := v.(Checker); ok {
 			check = p.Check
+		} else {
+			check = DefaultResourceChecker
 		}
 	}
 
