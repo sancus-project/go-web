@@ -1,7 +1,6 @@
 package resource
 
 import (
-	"context"
 	"net/http"
 	"sort"
 	"strings"
@@ -9,8 +8,6 @@ import (
 	"go.sancus.dev/web"
 	"go.sancus.dev/web/errors"
 )
-
-type ContextChecker func(ctx context.Context) (context.Context, error)
 
 type Resource struct {
 	h     map[string]web.HandlerFunc
@@ -49,6 +46,12 @@ func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc, check ContextChe
 		eh = errors.HandleError
 	}
 
+	if check == nil {
+		if p, ok := v.(Checker); ok {
+			check = p.Check
+		}
+	}
+
 	*m = Resource{
 		h:     make(map[string]web.HandlerFunc),
 		eh:    eh,
@@ -56,32 +59,24 @@ func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc, check ContextChe
 	}
 
 	// GET
-	if p, ok := v.(interface {
-		Get(http.ResponseWriter, *http.Request) error
-	}); ok {
+	if p, ok := v.(Getter); ok {
 		m.h["GET"] = p.Get
 	}
 
 	// HEAD
-	if p, ok := v.(interface {
-		Head(http.ResponseWriter, *http.Request) error
-	}); ok {
+	if p, ok := v.(Peeker); ok {
 		m.h["HEAD"] = p.Head
 	} else if fn, ok := m.h["GET"]; ok {
 		m.h["HEAD"] = fn
 	}
 
 	// POST
-	if p, ok := v.(interface {
-		Post(http.ResponseWriter, *http.Request) error
-	}); ok {
+	if p, ok := v.(Poster); ok {
 		m.h["POST"] = p.Post
 	}
 
 	// OPTIONS
-	if p, ok := v.(interface {
-		Options(http.ResponseWriter, *http.Request) error
-	}); ok {
+	if p, ok := v.(Optioner); ok {
 		m.h["OPTIONS"] = p.Options
 	} else {
 		var allowed []string
