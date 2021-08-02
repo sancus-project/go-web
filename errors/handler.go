@@ -6,6 +6,8 @@ import (
 )
 
 var (
+	// 400
+	ErrBadRequest = &HandlerError{Code: http.StatusBadRequest}
 	// 404
 	ErrNotFound = &HandlerError{Code: http.StatusNotFound}
 	// 406
