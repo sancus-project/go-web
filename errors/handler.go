@@ -6,7 +6,10 @@ import (
 )
 
 var (
+	// 404
 	ErrNotFound = &HandlerError{Code: http.StatusNotFound}
+	// 406
+	ErrNotAcceptable = &HandlerError{Code: http.StatusNotAcceptable}
 )
 
 // Reference Handler error
