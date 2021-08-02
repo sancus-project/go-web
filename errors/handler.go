@@ -46,12 +46,14 @@ func (err HandlerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	code := err.Status()
 
 	if err.Header != nil {
-		err.Header.Del("Context-Type")
-		err.Header.Del("X-Context-Type-Options")
-
 		for k, v := range err.Header {
-			for _, s := range v {
-				w.Header().Add(k, s)
+			switch k {
+			case "Context-Type", "X-Context-Type-Options":
+				// skip
+			default:
+				for _, s := range v {
+					w.Header().Add(k, s)
+				}
 			}
 		}
 	}
@@ -60,6 +62,7 @@ func (err HandlerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.StatusOK, http.StatusNoContent:
 		w.WriteHeader(http.StatusNoContent)
 	default:
+
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.WriteHeader(code)
@@ -73,6 +76,20 @@ func (err HandlerError) TryServeHTTP(w http.ResponseWriter, r *http.Request) err
 
 	switch code {
 	case http.StatusOK, http.StatusNoContent:
+
+		if err.Header != nil {
+			for k, v := range err.Header {
+				switch k {
+				case "Context-Type", "X-Context-Type-Options":
+					// skip
+				default:
+					for _, s := range v {
+						w.Header().Add(k, s)
+					}
+				}
+			}
+		}
+
 		w.WriteHeader(http.StatusNoContent)
 		return nil
 	default:
