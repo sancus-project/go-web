@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"context"
 	"net/http"
 	"sort"
 	"strings"
@@ -9,12 +10,26 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
+type ContextChecker func(ctx context.Context) (context.Context, error)
+
 type Resource struct {
-	h  map[string]web.HandlerFunc
-	eh web.ErrorHandlerFunc
+	h     map[string]web.HandlerFunc
+	eh    web.ErrorHandlerFunc
+	check ContextChecker
 }
 
 func (m *Resource) TryServeHTTP(rw http.ResponseWriter, req *http.Request) error {
+	if m.check != nil {
+		ctx0 := req.Context()
+		if ctx1, err := m.check(ctx0); err != nil {
+			// incorrect context, fail
+			return err
+		} else if ctx0 != ctx1 {
+			// new context, update request
+			req = req.WithContext(ctx1)
+		}
+	}
+
 	h, ok := m.h[req.Method]
 	if !ok {
 		h = m.h["OPTIONS"]
@@ -29,14 +44,15 @@ func (m *Resource) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc) {
+func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc, check ContextChecker) {
 	if eh == nil {
 		eh = errors.HandleError
 	}
 
 	*m = Resource{
-		h:  make(map[string]web.HandlerFunc),
-		eh: eh,
+		h:     make(map[string]web.HandlerFunc),
+		eh:    eh,
+		check: check,
 	}
 
 	// GET
@@ -93,8 +109,8 @@ func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc) {
 	}
 }
 
-func NewResource(v interface{}, eh web.ErrorHandlerFunc) *Resource {
+func NewResource(v interface{}, eh web.ErrorHandlerFunc, check ContextChecker) *Resource {
 	m := &Resource{}
-	m.Init(v, eh)
+	m.Init(v, eh, check)
 	return m
 }
