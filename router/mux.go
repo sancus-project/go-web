@@ -89,7 +89,7 @@ func (m *Mux) getNode(path string) *node {
 }
 
 // resolve updates the RouteContext for each http.Request
-func (m *Mux) resolve(h web.Handler, rctx *context.Context, prefix, path string) (web.Handler, *context.Context, bool) {
+func (m *Mux) resolve(h web.Handler, rctx *context.RoutingContext, prefix, path string) (web.Handler, *context.RoutingContext, bool) {
 	if rctx != nil {
 		rctx = rctx.Step(prefix)
 	} else {
@@ -100,7 +100,7 @@ func (m *Mux) resolve(h web.Handler, rctx *context.Context, prefix, path string)
 }
 
 // Resolve finds the best handler for a path and returns the corresponding RouteContext, prefix, and path
-func (m *Mux) Resolve(path string, rctx *context.Context) (web.Handler, *context.Context, bool) {
+func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *context.RoutingContext, bool) {
 	if s0, s1, h := m.findBestNode(path); h != nil {
 		return m.resolve(h, rctx, s0, s1)
 	} else {

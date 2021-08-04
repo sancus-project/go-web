@@ -8,7 +8,7 @@ import (
 	"go.sancus.dev/core/errors"
 )
 
-func (rctx *Context) Init(prefix, path string) {
+func (rctx *RoutingContext) Init(prefix, path string) {
 	var pattern string
 
 	if prefix == "" {
@@ -23,14 +23,14 @@ func (rctx *Context) Init(prefix, path string) {
 		pattern = filepath.Join(prefix, "*")
 	}
 
-	*rctx = Context{
+	*rctx = RoutingContext{
 		RoutePrefix:  prefix,
 		RoutePattern: pattern,
 		RoutePath:    path,
 	}
 }
 
-func (rctx *Context) Path() string {
+func (rctx *RoutingContext) Path() string {
 	var s string
 
 	prefix := rctx.RoutePrefix
@@ -47,7 +47,7 @@ func (rctx *Context) Path() string {
 	return s
 }
 
-func (rctx *Context) Step(prefix string) *Context {
+func (rctx *RoutingContext) Step(prefix string) *RoutingContext {
 	var path string
 
 	pattern := strings.TrimSuffix("/*", rctx.RoutePattern)
@@ -87,7 +87,7 @@ func (rctx *Context) Step(prefix string) *Context {
 		}
 	}
 
-	next := &Context{
+	next := &RoutingContext{
 		RoutePath:    path,
 		RoutePrefix:  prefix,
 		RoutePattern: pattern,
@@ -96,7 +96,7 @@ func (rctx *Context) Step(prefix string) *Context {
 	return next
 }
 
-func (rctx *Context) Next() (*Context, string) {
+func (rctx *RoutingContext) Next() (*RoutingContext, string) {
 
 	path := rctx.RoutePath
 	if len(path) > 1 {

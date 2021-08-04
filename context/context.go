@@ -4,30 +4,30 @@ import (
 	"go.sancus.dev/core/context"
 )
 
-type Context struct {
+type RoutingContext struct {
 	RoutePrefix  string
 	RoutePath    string
 	RoutePattern string
 }
 
-// Clone() creates a copy of a routing Context object
-func (rctx Context) Clone() *Context {
+// Clone() creates a copy of a RoutingContext object
+func (rctx RoutingContext) Clone() *RoutingContext {
 	return &rctx
 }
 
-// RouteContext returns mix's routing Context object from a
+// RouteContext returns a RoutingContext object from a
 // http.Request Context.
-func RouteContext(ctx context.Context) *Context {
+func RouteContext(ctx context.Context) *RoutingContext {
 
-	if rctx, ok := ctx.Value(RouteCtxKey).(*Context); ok {
+	if rctx, ok := ctx.Value(RouteCtxKey).(*RoutingContext); ok {
 		return rctx
 	}
 	return nil
 }
 
-// NewRouteContext returns a new routing Context object.
-func NewRouteContext(prefix, path string) *Context {
-	rctx := &Context{}
+// NewRouteContext returns a new RoutingContext object.
+func NewRouteContext(prefix, path string) *RoutingContext {
+	rctx := &RoutingContext{}
 	rctx.Init(prefix, path)
 	return rctx
 }
@@ -35,12 +35,12 @@ func NewRouteContext(prefix, path string) *Context {
 // WithRouteContext returns a new http.Request Context with
 // a given mix routing Context object connected to it, so it
 // can later be extracted using RouteContext()
-func WithRouteContext(ctx context.Context, rctx *Context) context.Context {
+func WithRouteContext(ctx context.Context, rctx *RoutingContext) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	if rctx == nil {
-		rctx = &Context{}
+		rctx = &RoutingContext{}
 	}
 	return context.WithValue(ctx, RouteCtxKey, rctx)
 }
