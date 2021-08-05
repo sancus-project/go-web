@@ -1,5 +1,7 @@
 package pathparser
 
+//go:generate peg -inline -switch -output pathparser.peg.go pathparser.peg
+
 import (
 	"fmt"
 	"log"
