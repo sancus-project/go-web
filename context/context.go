@@ -8,11 +8,28 @@ type RoutingContext struct {
 	RoutePrefix  string
 	RoutePath    string
 	RoutePattern string
+	RouteParams  map[string]interface{}
 }
 
 // Clone() creates a copy of a RoutingContext object
 func (rctx RoutingContext) Clone() *RoutingContext {
+	if l := len(rctx.RouteParams); l > 0 {
+		m := make(map[string]interface{}, l)
+		for k, v := range rctx.RouteParams {
+			m[k] = v
+		}
+		rctx.RouteParams = m
+	}
 	return &rctx
+}
+
+// RouteParams returns the Routing map of parameters from a
+// http.Request Context.
+func RouteParams(ctx context.Context) map[string]interface{} {
+	if rctx := RouteContext(ctx); rctx != nil {
+		return rctx.RouteParams
+	}
+	return nil
 }
 
 // RouteContext returns a RoutingContext object from a
