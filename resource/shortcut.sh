@@ -15,6 +15,7 @@ package resource
 import (
 	"net/http"
 
+	"go.sancus.dev/web/context"
 	"go.sancus.dev/web/forms"
 )
 EOT
@@ -34,8 +35,38 @@ for x in :string Int16 Int32 Float32 Bool; do
 
 	cat <<EOT
 
+// Tries to get a $t field from a POSTed form
 func (_ Resource) FormValue$n(req *http.Request, key string) ($t, error) {
 	return forms.FormValue$n(req, key$extra)
+}
+EOT
+done
+
+for x in :interface{} Int String; do
+
+	n=${x%:*}
+	t=${x#*:}
+	if [ "x$t" = "x$x" ]; then
+		t=$(echo "$x" | tr 'A-Z' 'a-z')
+	fi
+	
+	cat <<EOT
+
+// Tries to get a $t Route Parameter from RouteContext
+func (_ Resource) RouteParam$n(req *http.Request, key string) ($t, bool) {
+	var zero $t
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.Get$n(key)
+	}
+	return zero, false
+}
+
+// Tries to get slice of $t Route Parameters from RouteContext
+func (_ Resource) RouteParam${n}Slice(req *http.Request, key string) ([]$t, bool) {
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.Get${n}Slice(key)
+	}
+	return nil, false
 }
 EOT
 done

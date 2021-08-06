@@ -6,25 +6,82 @@ package resource
 import (
 	"net/http"
 
+	"go.sancus.dev/web/context"
 	"go.sancus.dev/web/forms"
 )
 
+// Tries to get a string field from a POSTed form
 func (_ Resource) FormValue(req *http.Request, key string) (string, error) {
 	return forms.FormValue(req, key)
 }
 
+// Tries to get a int16 field from a POSTed form
 func (_ Resource) FormValueInt16(req *http.Request, key string) (int16, error) {
 	return forms.FormValueInt16(req, key, 10)
 }
 
+// Tries to get a int32 field from a POSTed form
 func (_ Resource) FormValueInt32(req *http.Request, key string) (int32, error) {
 	return forms.FormValueInt32(req, key, 10)
 }
 
+// Tries to get a float32 field from a POSTed form
 func (_ Resource) FormValueFloat32(req *http.Request, key string) (float32, error) {
 	return forms.FormValueFloat32(req, key)
 }
 
+// Tries to get a bool field from a POSTed form
 func (_ Resource) FormValueBool(req *http.Request, key string) (bool, error) {
 	return forms.FormValueBool(req, key)
+}
+
+// Tries to get a interface{} Route Parameter from RouteContext
+func (_ Resource) RouteParam(req *http.Request, key string) (interface{}, bool) {
+	var zero interface{}
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.Get(key)
+	}
+	return zero, false
+}
+
+// Tries to get slice of interface{} Route Parameters from RouteContext
+func (_ Resource) RouteParamSlice(req *http.Request, key string) ([]interface{}, bool) {
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.GetSlice(key)
+	}
+	return nil, false
+}
+
+// Tries to get a int Route Parameter from RouteContext
+func (_ Resource) RouteParamInt(req *http.Request, key string) (int, bool) {
+	var zero int
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.GetInt(key)
+	}
+	return zero, false
+}
+
+// Tries to get slice of int Route Parameters from RouteContext
+func (_ Resource) RouteParamIntSlice(req *http.Request, key string) ([]int, bool) {
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.GetIntSlice(key)
+	}
+	return nil, false
+}
+
+// Tries to get a string Route Parameter from RouteContext
+func (_ Resource) RouteParamString(req *http.Request, key string) (string, bool) {
+	var zero string
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.GetString(key)
+	}
+	return zero, false
+}
+
+// Tries to get slice of string Route Parameters from RouteContext
+func (_ Resource) RouteParamStringSlice(req *http.Request, key string) ([]string, bool) {
+	if rctx := context.RouteContext(req.Context()); rctx != nil {
+		return rctx.GetStringSlice(key)
+	}
+	return nil, false
 }
