@@ -23,7 +23,7 @@ func (rctx *RoutingContext) Add(key string, v interface{}) {
 		switch ww := w.(type) {
 		case []interface{}:
 			vv = ww
-		case interface{}:
+		case interface{}, nil:
 			vv = append(vv, w)
 		}
 	}
