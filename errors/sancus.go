@@ -15,6 +15,10 @@ func New(s string, args ...interface{}) error {
 	return errors.New(s, args...)
 }
 
+func NewWithStackTrace(skip int, s string, args ...interface{}) error {
+	return errors.NewWithStackTrace(skip+1, s, args...)
+}
+
 func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
