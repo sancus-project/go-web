@@ -10,6 +10,10 @@ cat <<EOT
 package context
 
 //go:generate $0 $*
+
+import (
+	"go.sancus.dev/core/typeconv"
+)
 EOT
 
 for x; do
@@ -33,9 +37,7 @@ func (rctx *RoutingContext) Get$n(key string) ($t, bool) {
 	var zero $t
 
 	if v, ok := rctx.Get(key); ok {
-		if w, ok := v.($t); ok {
-			return w, true
-		}
+		return typeconv.As$n(v)
 	}
 
 	return zero, false
@@ -47,12 +49,7 @@ EOT
 // Get slice of $t parameters from RouteContext
 func (rctx *RoutingContext) Get${n}Slice(key string) ([]$t, bool) {
 	if v, ok := rctx.Get(key); ok {
-		switch w := v.(type) {
-		case []$t:
-			return w, true
-		case $t:
-			return []$t{w}, true
-		}
+		return typeconv.As${n}Slice(v)
 	}
 
 	return nil, false
