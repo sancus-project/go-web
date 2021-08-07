@@ -2,5 +2,5 @@ github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/felixge/httpsnoop v1.0.2 h1:+nS9g82KMXccJ/wp0zyRW9ZBHFETmMGtkk+2CTTrW4o=
 github.com/felixge/httpsnoop v1.0.2/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
-go.sancus.dev/core v0.8.2 h1:S0sZAq4JX4gCOC0YjipprKeaePvz4e6yxxJsXWZ36VA=
-go.sancus.dev/core v0.8.2/go.mod h1:Gg1aTz1Hv0s0PNtfO0WZ4qMPMDzP0/DoyccfCho73yw=
+go.sancus.dev/core v0.8.3 h1:mmJ/+IOjOP0fHZMb0dQZxbCYVRaLA8cYUgOfcLEkre4=
+go.sancus.dev/core v0.8.3/go.mod h1:Gg1aTz1Hv0s0PNtfO0WZ4qMPMDzP0/DoyccfCho73yw=
