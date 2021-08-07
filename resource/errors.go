@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"path"
 
 	"go.sancus.dev/web/errors"
@@ -22,6 +23,9 @@ func (_ Resource) BadRequestf(s string, args ...interface{}) *errors.BadRequestE
 	return &valid
 }
 
-func (_ Resource) SeeOther(location string) *errors.RedirectError {
+func (_ Resource) SeeOther(location string, args ...interface{}) *errors.RedirectError {
+	if len(args) > 0 {
+		location = fmt.Sprintf(location, args...)
+	}
 	return errors.NewSeeOther(path.Clean(location))
 }
