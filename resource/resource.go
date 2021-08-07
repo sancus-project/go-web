@@ -77,6 +77,11 @@ func (m *Resource) Init(v interface{}, eh web.ErrorHandlerFunc, check ContextChe
 		m.h["POST"] = p.Post
 	}
 
+	// DELETE
+	if p, ok := v.(Deleter); ok {
+		m.h["DELETE"] = p.Delete
+	}
+
 	// OPTIONS
 	if p, ok := v.(Optioner); ok {
 		m.h["OPTIONS"] = p.Options

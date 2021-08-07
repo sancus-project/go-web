@@ -26,6 +26,11 @@ type Poster interface {
 	Post(rw http.ResponseWriter, req *http.Request) error
 }
 
+// DELETE
+type Deleter interface {
+	Delete(rw http.ResponseWriter, req *http.Request) error
+}
+
 // OPTIONS
 type Optioner interface {
 	Options(rw http.ResponseWriter, req *http.Request) error
