@@ -33,26 +33,24 @@ for x; do
 	cat <<EOT
 
 // Get $t parameter from RouteContext
-func (rctx *RoutingContext) Get$n(key string) ($t, bool) {
-	var zero $t
-
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.As$n(v)
+func (rctx *RoutingContext) Get$n(key string) (x $t, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.As$n(v)
 	}
-
-	return zero, false
+	return
 }
 EOT
 	fi
 	cat <<EOT
 
 // Get slice of $t parameters from RouteContext
-func (rctx *RoutingContext) Get${n}Slice(key string) ([]$t, bool) {
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.As${n}Slice(v)
+func (rctx *RoutingContext) Get${n}Slice(key string) (x []$t, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.As${n}Slice(v)
 	}
-
-	return nil, false
+	return
 }
 EOT
 done

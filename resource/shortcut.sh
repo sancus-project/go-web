@@ -37,7 +37,7 @@ for x in :string Int16 Int32 Float32 Bool; do
 	cat <<EOT
 
 // Tries to get a $t field from a POSTed form
-func (_ Resource) FormValue$n(req *http.Request, key string) ($t, error) {
+func (_ Resource) FormValue$n(req *http.Request, key string) ($t, error, bool) {
 	return forms.FormValue$n(req, key$extra)
 }
 EOT
@@ -54,20 +54,20 @@ for x in :interface{} Int String; do
 	cat <<EOT
 
 // Tries to get a $t Route Parameter from RouteContext
-func (_ Resource) RouteParam$n(req *http.Request, key string) ($t, bool) {
+func (_ Resource) RouteParam$n(req *http.Request, key string) ($t, error, bool) {
 	var zero $t
 	if rctx := context.RouteContext(req.Context()); rctx != nil {
 		return rctx.Get$n(key)
 	}
-	return zero, false
+	return zero, nil, false
 }
 
 // Tries to get slice of $t Route Parameters from RouteContext
-func (_ Resource) RouteParam${n}Slice(req *http.Request, key string) ([]$t, bool) {
+func (_ Resource) RouteParam${n}Slice(req *http.Request, key string) ([]$t, error, bool) {
 	if rctx := context.RouteContext(req.Context()); rctx != nil {
 		return rctx.Get${n}Slice(key)
 	}
-	return nil, false
+	return nil, nil, false
 }
 EOT
 done

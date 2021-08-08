@@ -41,40 +41,46 @@ func ParseForm(req *http.Request, size int64) error {
 	return nil
 }
 
-func FormValue(req *http.Request, key string) (string, error) {
+func FormValue(req *http.Request, key string) (string, error, bool) {
 	if req.Form == nil {
 		if err := ParseForm(req, 0); err != nil {
-			return "", err
+			return "", err, false
 		}
 	}
 
 	if v, ok := req.Form[key]; ok {
-		return strings.TrimSpace(v[0]), nil
+		return strings.TrimSpace(v[0]), nil, true
 	} else {
-		return "", nil
+		return "", nil, false
 	}
 }
 
-func FormValueInt(req *http.Request, key string, base int, bitSize int) (int64, error) {
-	if s, err := FormValue(req, key); err != nil {
-		return 0, err
-	} else {
-		return strconv.ParseInt(s, base, bitSize)
+func FormValueInt(req *http.Request, key string, base int, bitSize int) (int64, error, bool) {
+	var n int64
+
+	s, err, ok := FormValue(req, key)
+	if ok && err == nil {
+		n, err = strconv.ParseInt(s, base, bitSize)
 	}
+	return n, err, ok
 }
 
-func FormValueBool(req *http.Request, key string) (bool, error) {
-	if s, err := FormValue(req, key); err != nil {
-		return false, err
-	} else {
-		return strconv.ParseBool(s)
+func FormValueBool(req *http.Request, key string) (bool, error, bool) {
+	var v bool
+
+	s, err, ok := FormValue(req, key)
+	if ok && err == nil {
+		v, err = strconv.ParseBool(s)
 	}
+	return v, err, ok
 }
 
-func FormValueFloat(req *http.Request, key string, bitSize int) (float64, error) {
-	if s, err := FormValue(req, key); err != nil {
-		return 0., err
-	} else {
-		return strconv.ParseFloat(s, bitSize)
+func FormValueFloat(req *http.Request, key string, bitSize int) (float64, error, bool) {
+	var v float64
+
+	s, err, ok := FormValue(req, key)
+	if ok && err == nil {
+		v, err = strconv.ParseFloat(s, bitSize)
 	}
+	return v, err, ok
 }

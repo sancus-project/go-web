@@ -32,13 +32,9 @@ generate() {
 
 cat <<EOT
 
-func FormValue$n(req *http.Request, key string$extra_args) ($t, error) {
-	var zero $t
-	if v, err := FormValue$N(req, key$extra, $S); err != nil {
-		return zero, err
-	} else {
-		return $t(v), nil
-	}
+func FormValue$n(req *http.Request, key string$extra_args) ($t, error, bool) {
+	v, err, ok := FormValue$N(req, key$extra, $S)
+	return $t(v), err, ok
 }
 EOT
 }

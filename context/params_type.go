@@ -7,50 +7,46 @@ import (
 )
 
 // Get slice of interface{} parameters from RouteContext
-func (rctx *RoutingContext) GetSlice(key string) ([]interface{}, bool) {
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.AsSlice(v)
+func (rctx *RoutingContext) GetSlice(key string) (x []interface{}, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.AsSlice(v)
 	}
-
-	return nil, false
+	return
 }
 
 // Get int parameter from RouteContext
-func (rctx *RoutingContext) GetInt(key string) (int, bool) {
-	var zero int
-
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.AsInt(v)
+func (rctx *RoutingContext) GetInt(key string) (x int, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.AsInt(v)
 	}
-
-	return zero, false
+	return
 }
 
 // Get slice of int parameters from RouteContext
-func (rctx *RoutingContext) GetIntSlice(key string) ([]int, bool) {
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.AsIntSlice(v)
+func (rctx *RoutingContext) GetIntSlice(key string) (x []int, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.AsIntSlice(v)
 	}
-
-	return nil, false
+	return
 }
 
 // Get string parameter from RouteContext
-func (rctx *RoutingContext) GetString(key string) (string, bool) {
-	var zero string
-
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.AsString(v)
+func (rctx *RoutingContext) GetString(key string) (x string, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.AsString(v)
 	}
-
-	return zero, false
+	return
 }
 
 // Get slice of string parameters from RouteContext
-func (rctx *RoutingContext) GetStringSlice(key string) ([]string, bool) {
-	if v, ok := rctx.Get(key); ok {
-		return typeconv.AsStringSlice(v)
+func (rctx *RoutingContext) GetStringSlice(key string) (x []string, err error, ok bool) {
+	v, _, ok := rctx.Get(key)
+	if ok {
+		x, err = typeconv.AsStringSlice(v)
 	}
-
-	return nil, false
+	return
 }

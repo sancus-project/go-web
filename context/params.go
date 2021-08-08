@@ -34,12 +34,12 @@ func (rctx *RoutingContext) Add(key string, v interface{}) {
 }
 
 // Get item from RouteParams
-func (rctx *RoutingContext) Get(key string) (interface{}, bool) {
+func (rctx *RoutingContext) Get(key string) (interface{}, error, bool) {
 	if rctx.RouteParams != nil {
 		if w, ok := rctx.RouteParams[key]; ok {
-			return w, ok
+			return w, nil, ok
 		}
 	}
 
-	return nil, false
+	return nil, nil, false
 }
