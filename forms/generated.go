@@ -13,6 +13,16 @@ func FormValueFloat32(req *http.Request, key string) (float32, error, bool) {
 	return float32(v), err, ok
 }
 
+func FormValueInt(req *http.Request, key string, base int, bitsize int) (int, error, bool) {
+	v, err, ok := FormValueInt(req, key, base, bitsize)
+	return int(v), err, ok
+}
+
+func FormValueInt8(req *http.Request, key string, base int) (int8, error, bool) {
+	v, err, ok := FormValueInt(req, key, base, 8)
+	return int8(v), err, ok
+}
+
 func FormValueInt16(req *http.Request, key string, base int) (int16, error, bool) {
 	v, err, ok := FormValueInt(req, key, base, 16)
 	return int16(v), err, ok
@@ -21,4 +31,24 @@ func FormValueInt16(req *http.Request, key string, base int) (int16, error, bool
 func FormValueInt32(req *http.Request, key string, base int) (int32, error, bool) {
 	v, err, ok := FormValueInt(req, key, base, 32)
 	return int32(v), err, ok
+}
+
+func FormValueUint(req *http.Request, key string, base int, bitsize int) (uint, error, bool) {
+	v, err, ok := FormValueUint(req, key, base, bitsize)
+	return uint(v), err, ok
+}
+
+func FormValueUint8(req *http.Request, key string, base int) (uint8, error, bool) {
+	v, err, ok := FormValueUint(req, key, base, 8)
+	return uint8(v), err, ok
+}
+
+func FormValueUint16(req *http.Request, key string, base int) (uint16, error, bool) {
+	v, err, ok := FormValueUint(req, key, base, 16)
+	return uint16(v), err, ok
+}
+
+func FormValueUint32(req *http.Request, key string, base int) (uint32, error, bool) {
+	v, err, ok := FormValueUint(req, key, base, 32)
+	return uint32(v), err, ok
 }

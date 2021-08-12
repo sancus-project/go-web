@@ -55,16 +55,6 @@ func FormValue(req *http.Request, key string) (string, error, bool) {
 	}
 }
 
-func FormValueInt(req *http.Request, key string, base int, bitSize int) (int64, error, bool) {
-	var n int64
-
-	s, err, ok := FormValue(req, key)
-	if ok && err == nil {
-		n, err = strconv.ParseInt(s, base, bitSize)
-	}
-	return n, err, ok
-}
-
 func FormValueBool(req *http.Request, key string) (bool, error, bool) {
 	var v bool
 

@@ -30,6 +30,11 @@ generate() {
 		extra="$(echo "$1" | tr ',' '\n' | sed -e 's|^ \+||' -e 's| \+$||' | cut -d' ' -f1 | sed -e 's|^|, |' | tr -d '\n')"
 	fi
 
+	if [ -z "$S" ]; then
+		extra_args="${extra_args:+$extra_args, }bitsize int"
+		S=bitsize
+	fi
+
 cat <<EOT
 
 func FormValue$n(req *http.Request, key string$extra_args) ($t, error, bool) {
@@ -40,8 +45,11 @@ EOT
 }
 
 generate Float 32
-generate Int 16 "base int"
-generate Int 32 "base int"
+for x in Int Uint; do
+	for n in '' 8 16 32; do
+		generate "$x" "$n" "base int"
+	done
+done
 
 if ! cmp -s "$F" "$F~"; then
 	mv "$F~" "$F"
