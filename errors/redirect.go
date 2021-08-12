@@ -66,29 +66,37 @@ func (e *RedirectError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Redirected to %s", location)
 }
 
+func newRedirect(code int, location string, args ...interface{}) *RedirectError {
+	if len(args) > 0 {
+		location = fmt.Sprintf(location, args...)
+	}
+
+	return &RedirectError{location, code}
+}
+
 // 301
-func NewMovedPermanently(location string) *RedirectError {
-	return &RedirectError{location, http.StatusMovedPermanently}
+func NewMovedPermanently(location string, args ...interface{}) *RedirectError {
+	return newRedirect(http.StatusMovedPermanently, location, args...)
 }
 
 // 302
-func NewFound(location string) *RedirectError {
-	return &RedirectError{location, http.StatusFound}
+func NewFound(location string, args ...interface{}) *RedirectError {
+	return newRedirect(http.StatusFound, location, args...)
 }
 
 // 303
-func NewSeeOther(location string) *RedirectError {
-	return &RedirectError{location, http.StatusSeeOther}
+func NewSeeOther(location string, args ...interface{}) *RedirectError {
+	return newRedirect(http.StatusSeeOther, location, args...)
 }
 
 // 307
-func NewTemporaryRedirect(location string) *RedirectError {
-	return &RedirectError{location, http.StatusTemporaryRedirect}
+func NewTemporaryRedirect(location string, args ...interface{}) *RedirectError {
+	return newRedirect(http.StatusTemporaryRedirect, location, args...)
 }
 
 // 308
-func NewPermanentRedirect(location string) *RedirectError {
-	return &RedirectError{location, http.StatusPermanentRedirect}
+func NewPermanentRedirect(location string, args ...interface{}) *RedirectError {
+	return newRedirect(http.StatusPermanentRedirect, location, args...)
 }
 
 // Attempts to convert a given error into a RedirectError
