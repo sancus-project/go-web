@@ -52,3 +52,7 @@ func StackTrace(err error) errors.Stack {
 func AsValidator(err error) (errors.Validator, bool) {
 	return errors.AsValidator(err)
 }
+
+func ErrInvalidValue(s string, args ...interface{}) error {
+	return errors.ErrInvalidValue(s, args...)
+}
