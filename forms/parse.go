@@ -64,13 +64,3 @@ func FormValueBool(req *http.Request, key string) (bool, error, bool) {
 	}
 	return v, err, ok
 }
-
-func FormValueFloat(req *http.Request, key string, bitSize int) (float64, error, bool) {
-	var v float64
-
-	s, err, ok := FormValue(req, key)
-	if ok && err == nil {
-		v, err = strconv.ParseFloat(s, bitSize)
-	}
-	return v, err, ok
-}
