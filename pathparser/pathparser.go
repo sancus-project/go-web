@@ -94,6 +94,15 @@ func (p *Path) endCapture() {
 	p.addNode(nodeLiteral, v)
 }
 
+func (p *Path) Literal() bool {
+	for _, np := range p.nodes {
+		if np.t != nodeLiteral {
+			return false
+		}
+	}
+	return true
+}
+
 func (p *Path) Result() (string, bool) {
 	var leaf bool
 
