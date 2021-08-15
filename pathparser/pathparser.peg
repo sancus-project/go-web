@@ -5,7 +5,7 @@ type Peg Peg {
     Path
 }
 
-path    <- segment+ slash? eos            { p.finish() }
+path    <- segment+ slash? eos
 expr    <- literal / optional / capture
 segment <- slash expr
 

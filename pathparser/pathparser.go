@@ -94,28 +94,24 @@ func (p *Path) endCapture() {
 	p.addNode(nodeLiteral, v)
 }
 
-func (p *Path) finish() {
+func (p *Path) Result() (string, bool) {
+	var leaf bool
+
 	s := []string{`^`}
 
 	for _, np := range p.nodes {
 		s = append(s, np.s)
 	}
 
-	i, last := 1, len(s)-1
+	last := len(s) - 1
 	if s[last] != `/` {
 		s = append(s, `$`)
+		leaf = true
 	} else {
 		s[last] = `(/|$)`
-		i++
 	}
 
-	p.nodes[0].s = strings.Join(s, "")
-	p.nodes = p.nodes[0:i]
-}
-
-func (p *Path) Result() (string, bool) {
-	var leaf = (len(p.nodes) == 1)
-	return p.nodes[0].s, leaf
+	return strings.Join(s, ""), leaf
 }
 
 // Turn path pattern into a regular expression
