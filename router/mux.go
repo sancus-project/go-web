@@ -126,26 +126,6 @@ func (m *Mux) getNode(path string) *node {
 	}
 }
 
-// resolve updates the RouteContext for each http.Request
-func (m *Mux) resolve(h web.Handler, rctx *context.RoutingContext, prefix, path string) (web.Handler, *context.RoutingContext, bool) {
-	if rctx != nil {
-		rctx = rctx.Step(prefix)
-	} else {
-		rctx = context.NewRouteContext(prefix, path)
-	}
-
-	return h, rctx, true
-}
-
-// Resolve finds the best handler for a path and returns the corresponding RouteContext, prefix, and path
-func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *context.RoutingContext, bool) {
-	if s0, s1, h := m.findBestNode(path); h != nil {
-		return m.resolve(h, rctx, s0, s1)
-	} else {
-		return nil, nil, false
-	}
-}
-
 // tryServeHTTP is the Router's entrypoint
 func (m *Mux) tryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	path := m.GetRoutePath(r)
