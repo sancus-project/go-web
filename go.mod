@@ -7,3 +7,5 @@ require (
 	github.com/felixge/httpsnoop v1.0.2
 	go.sancus.dev/core v0.16.0
 )
+
+replace go.sancus.dev/core => ../core
