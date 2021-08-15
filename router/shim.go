@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"strings"
 
 	"go.sancus.dev/core/errors"
 	"go.sancus.dev/web"
@@ -45,6 +46,9 @@ func (r *router) TryMethodFunc(method string, path string, h web.HandlerFunc) {
 }
 
 func (r *router) Route(path string, fn func(Router)) Router {
+	if !strings.HasSuffix(path, "/*") && !strings.HasSuffix(path, "/") {
+		path += "/*"
+	}
 	return r.getNode(path).route(fn)
 }
 
@@ -52,6 +56,8 @@ func (r *router) Route(path string, fn func(Router)) Router {
 // migrate between raw and ready states
 type node struct {
 	Handler
+
+	Pattern string
 }
 
 func (n *node) toolate(fn string) {

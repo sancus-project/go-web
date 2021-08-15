@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/armon/go-radix"
 
@@ -15,6 +16,7 @@ type Mux struct {
 	node
 
 	trie         *radix.Tree
+	pattern      map[*regexp.Regexp]*node
 	errorHandler web.ErrorHandlerFunc
 }
 
@@ -25,6 +27,7 @@ func NewRouter(h web.ErrorHandlerFunc) Router {
 
 	m := &Mux{
 		trie:         radix.New(),
+		pattern:      make(map[*regexp.Regexp]*node),
 		errorHandler: h,
 	}
 
@@ -45,24 +48,21 @@ func (m *Mux) GetRoutePath(r *http.Request) string {
 
 func (m *Mux) findBestNode(path string) (string, string, *node) {
 	if s, v, ok := m.trie.LongestPrefix(path); !ok {
-		goto fail
+		// no match
 	} else if h, ok := v.(*node); !ok {
-		goto fail
-	} else {
-
-		if s == path {
-			return s, "", h
-		}
-
-		l := len(s)
-		if s[l-1] == '/' {
-			return s, path[l-1:], h
-		} else if path[l] == '/' {
-			return s, path[l:], h
-		}
+		// wtf, how did this get in the trie?
+	} else if s == path {
+		// exact match
+		return s, "", h
+	} else if l := len(s); l < 2 {
+		// fail, "/" only matches "/"
+	} else if s[l-1] == '/' {
+		return s, path[l-1:], h
+	} else if path[l] == '/' {
+		return s, path[l:], h
 	}
 
-fail:
+	// fail
 	return "", "", nil
 }
 
@@ -76,16 +76,46 @@ func (m *Mux) getNode(path string) *node {
 		v.compile()
 	}
 
-	// reuse node when there is a match
-	if _, s1, h := m.findBestNode(path); h != nil && len(s1) == 0 {
-		return h
-	}
+	if p, err := m.parsePath(path); err != nil {
+		panic(err)
+	} else if p.Literal() {
+		// reuse node when there is a match
+		path = p.Path()
+		if _, s1, h := m.findBestNode(path); h != nil && len(s1) == 0 {
+			return h
+		}
 
-	// or create a new one
-	n := &node{}
-	n.initRaw(m)
-	m.trie.Insert(path, n)
-	return n
+		// or create a new one
+		n := &node{
+			Pattern: p.Pattern(),
+		}
+
+		n.initRaw(m)
+		m.trie.Insert(path, n)
+		return n
+	} else {
+		// reuse node when there is a match
+		pattern := p.Pattern()
+		for _, n := range m.pattern {
+			if n.Pattern == pattern {
+				return n
+			}
+		}
+
+		// or create a new one
+		re, err := p.Compile()
+		if err != nil {
+			panic(err)
+		}
+
+		n := &node{
+			Pattern: pattern,
+		}
+		n.initRaw(m)
+		m.pattern[re] = n
+
+		return n
+	}
 }
 
 // resolve updates the RouteContext for each http.Request
