@@ -36,7 +36,7 @@ func (mux *Mux) parsePath(path string) (*parser, error) {
 
 	p := &parser{
 		pattern: path,
-		path: path,
+		path:    path,
 	}
 
 	if path == "/" {
