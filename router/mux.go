@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/armon/go-radix"
 
@@ -47,19 +48,26 @@ func (m *Mux) GetRoutePath(r *http.Request) string {
 }
 
 func (m *Mux) findBestNode(path string) (string, string, *node) {
-	if s, v, ok := m.trie.LongestPrefix(path); !ok {
-		// no match
-	} else if h, ok := v.(*node); !ok {
-		// wtf, how did this get in the trie?
-	} else if s == path {
-		// exact match
-		return s, "", h
-	} else if l := len(s); l < 2 {
-		// fail, "/" only matches "/"
-	} else if s[l-1] == '/' {
-		return s, path[l-1:], h
-	} else if path[l] == '/' {
-		return s, path[l:], h
+	if s, v, ok := m.trie.LongestPrefix(path); ok {
+		if h, ok := v.(*node); !ok {
+			// wtf, how did this get in the trie?
+			panic(errors.New("bad node at %q (%T)", s, v))
+		} else if s == path {
+			// exact match
+			return s, "", h
+		} else if strings.HasSuffix(h.Pattern, "/*") {
+			// match for foo/* patterns
+
+			// `/*` special case
+			if s == "/" {
+				s = ""
+			}
+
+			if l := len(s); path[l] == '/' {
+				// good match
+				return s, path[l:], h
+			}
+		}
 	}
 
 	// fail
