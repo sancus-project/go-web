@@ -6,7 +6,7 @@ type Peg Peg {
 }
 
 path    <- segment+ slash? eos
-expr    <- literal / optional / capture
+expr    <- literal / optional / capture / star
 segment <- slash expr
 
 optional  <- bo expr segment* eo
@@ -14,6 +14,7 @@ capture   <- bc name (':' values ) ? ec
 name      <- <alpha set0*>                { p.addNode(nodeCaptureIdentifier, text) }
 values    <- option ('|' option)*
 option    <- <any+>                       { p.addNode(nodeCaptureOption, text) }
+star      <- '*'                          { p.addNode(nodeSpecial, "[^/]+") }
 
 literal       <- literal_chars+
 literal_chars <- <set1+>                  { p.addNode(nodeLiteral, text) } /
