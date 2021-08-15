@@ -35,20 +35,22 @@ func (p *parser) Compile() (*regexp.Regexp, error) {
 func (mux *Mux) parsePath(path string) (*parser, error) {
 
 	p := &parser{
-		pattern: path, // original
-		path:    path, // literal
+		pattern: path,
+		path: path,
 	}
 
-	// "/" and "/*" are special cases, for all other foo/*
-	// is the same as foo/
-
-	if path != "/" {
-
-		if s := p.path; s == "/*" {
-			// keep
-		} else if strings.HasSuffix(s, "/*") {
-			// remove trailing *
-			p.path = s[0 : len(s)-1]
+	if path == "/" {
+		// special case, root only
+	} else if path == "/*" {
+		// special case, root or anything bellow
+		p.path = "/"
+	} else {
+		if strings.HasSuffix(path, "/*") {
+			// remove trailing * from foo/* on paths
+			p.path = path[0 : len(path)-1]
+		} else if strings.HasSuffix(path, "/") {
+			// add trailing * to foo/ on pattern
+			p.pattern += "*"
 		}
 
 		peg := pathparser.Peg{
@@ -63,8 +65,12 @@ func (mux *Mux) parsePath(path string) (*parser, error) {
 
 		if !peg.Literal() {
 			p.re, _ = peg.Result()
+		} else if s := p.path; strings.HasSuffix(s, "/") {
+			// for literals we don't want the trailing
+			// slash so /foo/ also catches /foo like when
+			// using regexps
+			p.path = s[0 : len(s)-1]
 		}
-
 	}
 
 	return p, nil
