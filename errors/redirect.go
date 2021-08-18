@@ -63,7 +63,7 @@ func (e *RedirectError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", location)
 	w.WriteHeader(code)
 
-	fmt.Fprintln(w, "Redirected to %s", location)
+	fmt.Fprintf(w, "Redirected to %s", location)
 }
 
 func newRedirect(code int, location string, args ...interface{}) *RedirectError {
