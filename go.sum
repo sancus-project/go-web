@@ -4,3 +4,7 @@ github.com/felixge/httpsnoop v1.0.2 h1:+nS9g82KMXccJ/wp0zyRW9ZBHFETmMGtkk+2CTTrW
 github.com/felixge/httpsnoop v1.0.2/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 go.sancus.dev/core v0.12.0 h1:mIUFqEtYB+GbP0xaoRizYe+5vTwHSXis27cAIbWhT+A=
 go.sancus.dev/core v0.12.0/go.mod h1:Gg1aTz1Hv0s0PNtfO0WZ4qMPMDzP0/DoyccfCho73yw=
+go.sancus.dev/core v0.13.0 h1:LHfZUjyF6ji0uSqYLNvqOv+N9RxyHtsICpxPMWMFZ78=
+go.sancus.dev/core v0.13.0/go.mod h1:Gg1aTz1Hv0s0PNtfO0WZ4qMPMDzP0/DoyccfCho73yw=
+go.sancus.dev/core v0.14.0 h1:htMfb5osTuwJPfliCkdOr3MeiEJtqg3NcmYIMBGshD8=
+go.sancus.dev/core v0.14.0/go.mod h1:Gg1aTz1Hv0s0PNtfO0WZ4qMPMDzP0/DoyccfCho73yw=
