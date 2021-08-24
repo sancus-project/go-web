@@ -14,10 +14,6 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
-var (
-	ErrNotImplemented = errors.New("Not Implemented")
-)
-
 type WriteInterceptor struct {
 	buffer         bytes.Buffer
 	code           int
@@ -142,7 +138,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		Flush: func(original httpsnoop.FlushFunc) httpsnoop.FlushFunc {
 			return func() {
-				err := ErrNotImplemented
+				err := errors.ErrNotImplemented("%T.%s", m, "Flush")
 				log.Fatal(err)
 			}
 		},
@@ -155,7 +151,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		Hijack: func(original httpsnoop.HijackFunc) httpsnoop.HijackFunc {
 			return func() (net.Conn, *bufio.ReadWriter, error) {
-				err := ErrNotImplemented
+				err := errors.ErrNotImplemented("%T.%s", m, "Hijack")
 				log.Fatal(err)
 				return nil, nil, err
 			}
@@ -163,7 +159,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		ReadFrom: func(original httpsnoop.ReadFromFunc) httpsnoop.ReadFromFunc {
 			return func(src io.Reader) (int64, error) {
-				err := ErrNotImplemented
+				err := errors.ErrNotImplemented("%T.%s", m, "ReadFrom")
 				log.Fatal(err)
 				return 0, err
 			}
@@ -171,7 +167,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		Push: func(original httpsnoop.PushFunc) httpsnoop.PushFunc {
 			return func(target string, opts *http.PushOptions) error {
-				err := ErrNotImplemented
+				err := errors.ErrNotImplemented("%T.%s", m, "Push")
 				log.Fatal(err)
 				return err
 			}
