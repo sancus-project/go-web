@@ -98,6 +98,18 @@ func (m *WriteInterceptor) writeHeader(original httpsnoop.WriteHeaderFunc, code 
 	}
 }
 
+func (m *WriteInterceptor) hijack(original httpsnoop.HijackFunc) (net.Conn, *bufio.ReadWriter, error) {
+	if m.headersWritten {
+		log.Fatal(errors.New("%+n(%s): %s", errors.Here(), "Hijack", "Invalid Call"))
+	}
+
+	m.headersWritten = true
+	m.mute = false
+	m.capture = false
+
+	return original()
+}
+
 func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 	var mute bool
@@ -145,9 +157,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		Hijack: func(original httpsnoop.HijackFunc) httpsnoop.HijackFunc {
 			return func() (net.Conn, *bufio.ReadWriter, error) {
-				err := errors.ErrNotImplemented("%T.%s", m, "Hijack")
-				log.Fatal(err)
-				return nil, nil, err
+				return m.hijack(original)
 			}
 		},
 
