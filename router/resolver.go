@@ -1,8 +1,11 @@
 package router
 
 import (
+	"strings"
+
 	"go.sancus.dev/web"
 	"go.sancus.dev/web/context"
+	"go.sancus.dev/web/errors"
 )
 
 // Resolve finds the best handler for a path and returns the corresponding RouteContext
@@ -11,7 +14,14 @@ func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *
 
 	if h == nil {
 		return nil, nil, false
-	} else if rctx != nil {
+	}
+
+	if s1 == "" && strings.HasSuffix(h.Pattern, "/*") {
+		// redirect to the root of the subrouter
+		return errors.NewPermanentRedirect("%s/", s0), rctx, true
+	}
+
+	if rctx != nil {
 		rctx = rctx.Step(s0)
 	} else {
 		rctx = context.NewRouteContext(s0, s1)
