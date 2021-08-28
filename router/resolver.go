@@ -16,7 +16,7 @@ func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *
 		return nil, nil, false
 	}
 
-	if s1 == "" && strings.HasSuffix(h.Pattern, "/*") {
+	if s0 != "/" && s1 == "" && strings.HasSuffix(h.Pattern, "/*") {
 		// redirect to the root of the subrouter
 		return errors.NewPermanentRedirect("%s/", s0), rctx, true
 	}
