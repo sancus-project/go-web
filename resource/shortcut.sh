@@ -72,6 +72,6 @@ func (_ Resource) RouteParam${n}Slice(req *http.Request, key string) ([]$t, erro
 EOT
 done
 
-if ! cmp -s "$F" "$F~"; then
+if ! diff -u "$F" "$F~" >&2; then
 	mv "$F~" "$F"
 fi

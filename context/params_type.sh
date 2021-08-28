@@ -55,6 +55,6 @@ func (rctx *RoutingContext) Get${n}Slice(key string) (x []$t, err error, ok bool
 EOT
 done
 
-if ! cmp -s "$F" "$F~"; then
+if ! diff -u "$F" "$F~" >&2; then
 	mv "$F~" "$F"
 fi
