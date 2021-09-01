@@ -27,4 +27,4 @@ test:
 deps: $(GOBIN)/peg
 
 $(GOBIN)/peg:
-	$(GO) get -u github.com/pointlander/peg
+	$(GO) install github.com/pointlander/peg@latest
