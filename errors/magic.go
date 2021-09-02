@@ -1,18 +1,27 @@
 package errors
 
 import (
+	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"go.sancus.dev/web"
 )
 
-func NewError(code int, headers http.Header, body []byte) error {
-	return NewWebError(code, headers, body)
+func NewErrorFromResponse(res *http.Response) error {
+	if res == nil {
+		return nil
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	return newWebError(res.StatusCode, res.Header, body, err)
 }
 
 func NewWebError(code int, headers http.Header, body []byte) web.Error {
+	return newWebError(code, headers, body, nil)
+}
 
+func newWebError(code int, headers http.Header, body []byte, readError error) web.Error {
 	if code < 100 {
 		// 500
 		code = http.StatusInternalServerError
@@ -35,6 +44,7 @@ func NewWebError(code int, headers http.Header, body []byte) web.Error {
 	} else {
 		return &HandlerError{
 			Code:   code,
+			Err:    readError,
 			Header: headers,
 		}
 	}

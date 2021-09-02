@@ -44,7 +44,7 @@ func (dw *DummyWriter) WriteHeader(code int) {
 }
 
 func (dw *DummyWriter) Error() error {
-	return errors.NewError(dw.Status(), dw.Header(), dw.buffer.Bytes())
+	return errors.NewWebError(dw.Status(), dw.Header(), dw.buffer.Bytes())
 }
 
 func (dw *DummyWriter) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
