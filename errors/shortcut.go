@@ -12,6 +12,14 @@ func ErrInvalidValue(s string, args ...interface{}) error {
 	return errors.ErrInvalidValue(s, args...)
 }
 
+func AsInvalidValueError(err error, s string, args ...interface{}) error {
+	return errors.AsInvalidValueError(err, s, args...)
+}
+
 func ErrNotImplemented(s string, args ...interface{}) error {
 	return errors.ErrNotImplemented(s, args...)
+}
+
+func AsNotImplementedError(err error, s string, args ...interface{}) error {
+	return errors.AsNotImplementedError(err, s, args...)
 }

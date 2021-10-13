@@ -28,6 +28,10 @@ for x in \
 func Err$x(s string, args ...interface{}) error {
 	return errors.Err$x(s, args...)
 }
+
+func As${x}Error(err error, s string, args ...interface{}) error {
+	return errors.As${x}Error(err, s, args...)
+}
 EOT
 done
 
