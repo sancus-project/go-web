@@ -20,6 +20,8 @@ EOT
 
 for x in \
 	InvalidValue \
+	InvalidArgument \
+	MissingField \
 	NotImplemented \
 	; do
 

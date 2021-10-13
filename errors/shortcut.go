@@ -16,6 +16,22 @@ func AsInvalidValueError(err error, s string, args ...interface{}) error {
 	return errors.AsInvalidValueError(err, s, args...)
 }
 
+func ErrInvalidArgument(s string, args ...interface{}) error {
+	return errors.ErrInvalidArgument(s, args...)
+}
+
+func AsInvalidArgumentError(err error, s string, args ...interface{}) error {
+	return errors.AsInvalidArgumentError(err, s, args...)
+}
+
+func ErrMissingField(s string, args ...interface{}) error {
+	return errors.ErrMissingField(s, args...)
+}
+
+func AsMissingFieldError(err error, s string, args ...interface{}) error {
+	return errors.AsMissingFieldError(err, s, args...)
+}
+
 func ErrNotImplemented(s string, args ...interface{}) error {
 	return errors.ErrNotImplemented(s, args...)
 }
