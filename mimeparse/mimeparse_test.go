@@ -10,7 +10,7 @@ func parsedEqual(test *testing.T, mime string, t string, st string, params map[s
 	r, err := ParseMediaRange(mime)
 	_, file, line, _ := runtime.Caller(1)
 	if err != nil {
-		test.Errorf("%s:%d Failed to parse", file, line, err)
+		test.Errorf("%s:%d Failed to parse: %s", file, line, err)
 	}
 	if t != r.mtype {
 		test.Errorf("%s:%d Failed to parse major type %s from %s, got %s\n", file, line, t, mime, r.mtype)
@@ -40,7 +40,7 @@ func TestParseMediaRange(t *testing.T) {
 
 func TestRFC2616Example(t *testing.T) {
 	accept := "text/*;q=0.3, text/html;q=0.7, text/html;level=1, text/html;level=2;q=0.4, * /*;q=0.5"
-	cond := map[string]float{
+	cond := map[string]float64{
 		"text/html;level=1": 1.0,
 		"text/html":         0.7,
 		"text/plain":        0.3,
