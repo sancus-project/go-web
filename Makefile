@@ -1,4 +1,4 @@
-.PHONY: all generate fmt build get test deps
+.PHONY: all generate fmt build install get test deps
 
 GO ?= go
 GOPATH ?= $(CURDIR)
@@ -20,6 +20,9 @@ generate: deps
 
 get:
 	$(GO) get -v ./...
+
+install:
+	$(GO) install -v ./cmd/...
 
 build:
 	$(GO) build -v ./...
