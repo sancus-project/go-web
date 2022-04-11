@@ -11,7 +11,7 @@ all: generate fmt build
 
 fmt:
 	@find . -name '*.go' | xargs -r $(GOFMT) $(GOFMT_FLAGS)
-	$(GO) mod tidy || true
+	$(GO) mod tidy
 
 generate: deps
 	@git grep -l '^//go:generate' | sed -n -e 's|\(.*\)/[^/]\+\.go$$|\1|p' | sort -u | while read d; do \
