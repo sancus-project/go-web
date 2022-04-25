@@ -1,9 +1,16 @@
 package errors
 
+//go:generate ./errorstack.sh BadRequest
+
 import (
 	"net/http"
 
 	"go.sancus.dev/core/errors"
+)
+
+var (
+	// Constant http.StatusBadRequest HandlerError
+	ErrBadRequest = &HandlerError{Code: http.StatusBadRequest}
 )
 
 type BadRequestError struct {
