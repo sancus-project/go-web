@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"fmt"
 	"net/http"
 
 	"go.sancus.dev/core/errors"
@@ -28,17 +27,9 @@ func (err *BadRequestError) Status() int {
 }
 
 func (err *BadRequestError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := err.Status()
+	serveHTTP(err, w, r)
+}
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.WriteHeader(code)
-
-	fmt.Fprintln(w, ErrorText(code))
-	if code != http.StatusOK {
-		fmt.Fprintln(w)
-		for _, e := range err.Errors() {
-			fmt.Fprintln(w, e.Error())
-		}
-	}
+func (err *BadRequestError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
+	return tryServeHTTP(err, w, r)
 }

@@ -3,6 +3,9 @@ package errors
 import (
 	"fmt"
 	"net/http"
+
+	"go.sancus.dev/core/errors"
+	"go.sancus.dev/web"
 )
 
 var (
@@ -47,11 +50,22 @@ func (err HandlerError) Error() string {
 	return ErrorText(err.Status())
 }
 
+func (err HandlerError) Headers() http.Header {
+	return err.Header
+}
+
 func (err HandlerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	serveHTTP(err, w, r)
+}
+
+func serveHTTP(err web.Error, w http.ResponseWriter, r *http.Request) {
 	code := err.Status()
 
-	if err.Header != nil {
-		for k, v := range err.Header {
+	// Headers
+	if he, ok := err.(interface {
+		Headers() http.Header
+	}); ok {
+		for k, v := range he.Headers() {
 			switch k {
 			case "Context-Type", "X-Context-Type-Options":
 				// skip
@@ -73,29 +87,46 @@ func (err HandlerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(code)
 
 		fmt.Fprintln(w, ErrorText(code))
+
+		if p, ok := err.(interface {
+			Recovered() error
+		}); ok {
+			// Panic
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, "panic:", p.Recovered())
+		} else if p, ok := err.(interface {
+			Errors() []error
+		}); ok {
+			// Validator
+			fmt.Fprintln(w)
+			for _, err := range p.Errors() {
+				fmt.Fprintln(w, err.Error())
+			}
+
+		} else if p := errors.Unwrap(err); p != nil {
+			// Wrapped
+			fmt.Fprintln(w)
+			fmt.Fprintln(w, p.Error())
+		}
+
+		// StackTrace
+		if p, ok := errors.AsStackTracer(err); ok {
+			fmt.Fprintln(w)
+			fmt.Fprintf(w, "%#+v", p.StackTrace())
+		}
 	}
 }
 
 func (err HandlerError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
+	return tryServeHTTP(err, w, r)
+}
+
+func tryServeHTTP(err web.Error, rw http.ResponseWriter, req *http.Request) error {
 	code := err.Status()
 
 	switch code {
 	case http.StatusOK, http.StatusNoContent:
-
-		if err.Header != nil {
-			for k, v := range err.Header {
-				switch k {
-				case "Context-Type", "X-Context-Type-Options":
-					// skip
-				default:
-					for _, s := range v {
-						w.Header().Add(k, s)
-					}
-				}
-			}
-		}
-
-		w.WriteHeader(http.StatusNoContent)
+		serveHTTP(err, rw, req)
 		return nil
 	default:
 		return err
