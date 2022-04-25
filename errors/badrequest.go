@@ -11,6 +11,14 @@ type BadRequestError struct {
 	errors.ErrorStack
 }
 
+func (err *BadRequestError) AsError() error {
+	if err.Ok() {
+		return nil
+	} else {
+		return err
+	}
+}
+
 func (err *BadRequestError) Status() int {
 	if err.Ok() {
 		return http.StatusOK
