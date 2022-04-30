@@ -43,6 +43,12 @@ func (err *BadRequestError) TryServeHTTP(w http.ResponseWriter, r *http.Request)
 	return tryServeHTTP(err, w, r)
 }
 
+func BadRequest(errs ...error) *BadRequestError {
+	return &BadRequestError{
+		ErrorStack: errors.NewErrorStack(errs...),
+	}
+}
+
 type NotAcceptableError struct {
 	errors.ErrorStack
 }
@@ -69,4 +75,10 @@ func (err *NotAcceptableError) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 func (err *NotAcceptableError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	return tryServeHTTP(err, w, r)
+}
+
+func NotAcceptable(errs ...error) *NotAcceptableError {
+	return &NotAcceptableError{
+		ErrorStack: errors.NewErrorStack(errs...),
+	}
 }

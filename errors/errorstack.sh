@@ -14,8 +14,9 @@ package ${GOPACKAGE:-undefined}
 EOT
 
 gen() {
-	local T="${1}Error"
-	local S="Status${1}"
+	local K="$1"
+	local T="${K}Error"
+	local S="Status${K}"
 
 cat <<EOT
 
@@ -45,6 +46,12 @@ func (err *$T) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (err *$T) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	return tryServeHTTP(err, w, r)
+}
+
+func $K(errs... error) *$T {
+	return &$T{
+		ErrorStack: errors.NewErrorStack(errs...),
+	}
 }
 EOT
 }
