@@ -16,6 +16,8 @@ type Router interface {
 	MiniRouter
 
 	Use(web.MiddlewareHandlerFunc) Router
+
+	Walk(fn WalkFn)
 }
 
 type MiniRouter interface {
