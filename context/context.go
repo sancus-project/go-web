@@ -1,6 +1,8 @@
 package context
 
 import (
+	"net/http"
+
 	"go.sancus.dev/core/context"
 )
 
@@ -35,7 +37,6 @@ func RouteParams(ctx context.Context) map[string]interface{} {
 // RouteContext returns a RoutingContext object from a
 // http.Request Context.
 func RouteContext(ctx context.Context) *RoutingContext {
-
 	if rctx, ok := ctx.Value(RouteCtxKey).(*RoutingContext); ok {
 		return rctx
 	}
@@ -60,6 +61,30 @@ func WithRouteContext(ctx context.Context, rctx *RoutingContext) context.Context
 		rctx = &RoutingContext{}
 	}
 	return context.WithValue(ctx, RouteCtxKey, rctx)
+}
+
+// GetRoutePath returns the Path to route, either from our RoutingContext,
+// or from the Request's URL
+func GetRoutePath(req *http.Request) string {
+	if rctx := RouteContext(req.Context()); rctx != nil {
+		return rctx.RoutePath
+	} else {
+		return req.URL.Path
+	}
+}
+
+// GetRouteContextPath returns a RoutingContext and the corresponding
+// RoutePath. If the Context doesn't contain a RoutingContext one will be created
+func GetRouteContextPath(req *http.Request) (context.Context, *RoutingContext, string) {
+	ctx := req.Context()
+	rctx := RouteContext(ctx)
+
+	if rctx == nil {
+		rctx = NewRouteContext("", req.URL.Path)
+		ctx = WithRouteContext(ctx, rctx)
+	}
+
+	return ctx, rctx, rctx.RoutePath
 }
 
 var (

@@ -39,14 +39,6 @@ func NewRouter(h web.ErrorHandlerFunc) Router {
 	return m
 }
 
-func (m *Mux) GetRoutePath(r *http.Request) string {
-	if rctx := context.RouteContext(r.Context()); rctx != nil {
-		return rctx.RoutePath
-	} else {
-		return r.URL.Path
-	}
-}
-
 func (m *Mux) findBestNode(path string) (string, string, *node) {
 	if s, v, ok := m.trie.LongestPrefix(path); ok {
 		if h, ok := v.(*node); !ok {
@@ -128,10 +120,9 @@ func (m *Mux) getNode(path string) *node {
 
 // tryServeHTTP is the Router's entrypoint
 func (m *Mux) tryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	path := m.GetRoutePath(r)
-	ctx := r.Context()
 
-	rctx := context.RouteContext(ctx)
+	// get (or create) RoutingContext and the corresponding Route Path
+	ctx, rctx, path := context.GetRouteContextPath(r)
 
 	if h, rctx, ok := m.Resolve(path, rctx); ok {
 
