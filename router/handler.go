@@ -48,7 +48,7 @@ func NewHandler(h web.Handler, chain []web.MiddlewareHandlerFunc, eh web.ErrorHa
 	}
 
 	if h, ok := h.(http.Handler); ok && h == h2 {
-		// don't wrapper handlers needlessly
+		// don't wrap handlers needlessly
 		return h.(Handler)
 	}
 
