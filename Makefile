@@ -1,4 +1,4 @@
-.PHONY: all generate fmt build test deps
+.PHONY: all generate fmt build get test deps
 
 GO ?= go
 GOPATH ?= $(CURDIR)
@@ -7,7 +7,7 @@ GOFMT ?= gofmt
 GOFMT_FLAGS = -w -l -s
 GOGENERATE_FLAGS = -v
 
-all: generate fmt build
+all: generate fmt get build
 
 fmt:
 	@find . -name '*.go' | xargs -r $(GOFMT) $(GOFMT_FLAGS)
@@ -18,8 +18,11 @@ generate: deps
 		git grep -l '^//go:generate' "$$d"/*.go | xargs -r $(GO) generate $(GOGENERATE_FLAGS); \
 	done
 
-build:
+get:
 	$(GO) get -v ./...
+
+build:
+	$(GO) build -v ./...
 
 test:
 	$(GO) test -v ./...
