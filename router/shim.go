@@ -46,9 +46,13 @@ func (r *router) TryMethodFunc(method string, path string, h web.HandlerFunc) {
 }
 
 func (r *router) Route(path string, fn func(Router)) Router {
-	if !strings.HasSuffix(path, "/*") && !strings.HasSuffix(path, "/") {
+
+	if strings.HasSuffix(path, "/") {
+		path += "*"
+	} else if !strings.HasSuffix(path, "/*") {
 		path += "/*"
 	}
+
 	return r.getNode(path).route(fn)
 }
 
