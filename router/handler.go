@@ -21,11 +21,11 @@ func (h *handler) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	return h.h1.TryServeHTTP(w, r)
 }
 
-func NewHandlerFunc(h web.HandlerFunc, chain []web.MiddlewareHandlerFunc, eh web.ErrorHandlerFunc) *handler {
+func NewHandlerFunc(h web.HandlerFunc, chain []web.MiddlewareHandlerFunc, eh web.ErrorHandlerFunc) Handler {
 	return NewHandler(h, chain, eh)
 }
 
-func NewHandler(h web.Handler, chain []web.MiddlewareHandlerFunc, eh web.ErrorHandlerFunc) *handler {
+func NewHandler(h web.Handler, chain []web.MiddlewareHandlerFunc, eh web.ErrorHandlerFunc) Handler {
 	var h2 http.Handler
 
 	if h == nil {
@@ -45,6 +45,11 @@ func NewHandler(h web.Handler, chain []web.MiddlewareHandlerFunc, eh web.ErrorHa
 	} else {
 		// no middleware chain, only add resolver for standard handler
 		h2 = intercept.Resolve(h, eh)
+	}
+
+	if h, ok := h.(http.Handler); ok && h == h2 {
+		// don't wrapper handlers needlessly
+		return h.(Handler)
 	}
 
 	return &handler{
