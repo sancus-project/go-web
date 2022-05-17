@@ -16,11 +16,7 @@ type RoutingContext struct {
 // Clone() creates a copy of a RoutingContext object
 func (rctx RoutingContext) Clone() *RoutingContext {
 	if l := len(rctx.RouteParams); l > 0 {
-		m := make(map[string]interface{}, l)
-		for k, v := range rctx.RouteParams {
-			m[k] = v
-		}
-		rctx.RouteParams = m
+		rctx.RouteParams = CloneRouteParams(rctx.RouteParams)
 	}
 	return &rctx
 }

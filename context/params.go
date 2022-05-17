@@ -1,5 +1,38 @@
 package context
 
+// Clone makes a copy of the the RouteParams table
+func CloneRouteParams(src map[string]interface{}) map[string]interface{} {
+	if l := len(src); l > 0 {
+		m := make(map[string]interface{})
+		for k, v := range src {
+			switch vv := v.(type) {
+			case []int:
+				ww := make([]int, len(vv))
+				for i, w := range vv {
+					ww[i] = w
+				}
+				v = ww
+			case []string:
+				ww := make([]string, len(vv))
+				for i, w := range vv {
+					ww[i] = w
+				}
+				v = ww
+			case []interface{}:
+				ww := make([]interface{}, len(vv))
+				for i, w := range vv {
+					ww[i] = w
+				}
+				v = ww
+			}
+
+			m[k] = v
+		}
+		return m
+	}
+	return nil
+}
+
 // Sets value for a RouteParam
 func (rctx *RoutingContext) Set(key string, v interface{}) {
 	if rctx.RouteParams == nil {
