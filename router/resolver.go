@@ -49,7 +49,7 @@ func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *
 	}
 
 	if rctx != nil {
-		rctx = rctx.Step(s0)
+		rctx = rctx.Step(s0, nil)
 	} else {
 		rctx = context.NewRouteContext(s0, s1)
 	}

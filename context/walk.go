@@ -30,7 +30,7 @@ func (rctx *RoutingContext) Init(prefix, path string) {
 	}
 }
 
-func (rctx *RoutingContext) Step(prefix string) *RoutingContext {
+func (rctx *RoutingContext) Step(prefix string, args map[string]string) *RoutingContext {
 	var path string
 
 	pattern := strings.TrimSuffix(rctx.RoutePattern, "/*")
@@ -74,6 +74,16 @@ func (rctx *RoutingContext) Step(prefix string) *RoutingContext {
 		RoutePath:    path,
 		RoutePrefix:  prefix,
 		RoutePattern: pattern,
+		RouteParams:  rctx.RouteParams,
+	}
+
+	if len(args) > 0 {
+
+		next.RouteParams = CloneRouteParams(rctx.RouteParams)
+
+		for k, v := range args {
+			next.Set(k, v)
+		}
 	}
 
 	return next
@@ -93,7 +103,7 @@ func (rctx *RoutingContext) Next() (*RoutingContext, string) {
 			prefix = path[:n+1]
 		}
 
-		next := rctx.Step(prefix)
+		next := rctx.Step(prefix, nil)
 
 		return next, s
 	}
