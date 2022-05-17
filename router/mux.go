@@ -53,7 +53,7 @@ func (m *Mux) getNode(path string) *node {
 	} else if p.Literal() {
 		// reuse node when there is a match
 		path = p.Path()
-		if _, s1, h := m.findBestNode(path); h != nil && len(s1) == 0 {
+		if _, s1, h := m.findBestNode(path, nil); h != nil && len(s1) == 0 {
 			return h
 		}
 
