@@ -91,7 +91,7 @@ func (p *Path) endCapture() {
 
 	v = fmt.Sprintf("(?P<%s>%s)", p.nodes[i].s, v)
 	p.nodes = p.nodes[:i-1]
-	p.addNode(nodeLiteral, v)
+	p.addNode(nodeSpecial, v)
 }
 
 func (p *Path) Literal() bool {
