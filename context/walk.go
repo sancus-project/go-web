@@ -33,7 +33,7 @@ func (rctx *RoutingContext) Init(prefix, path string) {
 func (rctx *RoutingContext) Step(prefix string) *RoutingContext {
 	var path string
 
-	pattern := strings.TrimSuffix("/*", rctx.RoutePattern)
+	pattern := strings.TrimSuffix(rctx.RoutePattern, "/*")
 
 	if prefix == rctx.RoutePath {
 		// prefix is the whole RoutePath
