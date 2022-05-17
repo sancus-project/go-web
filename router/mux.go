@@ -3,7 +3,6 @@ package router
 import (
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/armon/go-radix"
 
@@ -37,33 +36,6 @@ func NewRouter(h web.ErrorHandlerFunc) Router {
 
 	m.router.getNode = m.getNode
 	return m
-}
-
-func (m *Mux) findBestNode(path string) (string, string, *node) {
-	if s, v, ok := m.trie.LongestPrefix(path); ok {
-		if h, ok := v.(*node); !ok {
-			// wtf, how did this get in the trie?
-			panic(errors.New("bad node at %q (%T)", s, v))
-		} else if s == path {
-			// exact match
-			return s, "", h
-		} else if strings.HasSuffix(h.Pattern, "/*") {
-			// match for foo/* patterns
-
-			// `/*` special case
-			if s == "/" {
-				s = ""
-			}
-
-			if l := len(s); path[l] == '/' {
-				// good match
-				return s, path[l:], h
-			}
-		}
-	}
-
-	// fail
-	return "", "", nil
 }
 
 // getNode() is only called by Router methods to populate the tree
