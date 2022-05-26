@@ -50,7 +50,7 @@ func (rctx *RoutingContext) Format(f fmt.State, verb rune) {
 		fmt.Fprintf(f, "%q, %q, %q", rctx.RoutePrefix, rctx.RoutePath, rctx.RoutePattern)
 
 		if f.Flag('#') {
-			params := make([]string, len(rctx.RouteParams), 0)
+			params := make([]string, 0, len(rctx.RouteParams))
 
 			for k, v := range rctx.RouteParams {
 				var s string
