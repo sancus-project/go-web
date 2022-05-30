@@ -47,7 +47,7 @@ type Mime struct {
 //
 // Mime {'application', 'xhtml', {'q', '0.5'}}, nil
 func ParseMimeType(mimetype string) (parsed Mime, err error) {
-	full_type, parts := ht(strings.Split(mimetype, ","))
+	full_type, parts := ht(strings.Split(mimetype, ";"))
 	full_type = strings.ToLower(full_type)
 	params := make(map[string]string)
 	for _, s := range parts {
