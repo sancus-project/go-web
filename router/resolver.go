@@ -1,6 +1,7 @@
 package router
 
 import (
+	"path"
 	"regexp"
 	"strings"
 
@@ -115,7 +116,7 @@ func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *
 
 	if s0 != "/" && s1 == "" && strings.HasSuffix(h.Pattern, "/*") {
 		// redirect to the root of the subrouter
-		return errors.NewPermanentRedirect("%s/", rctx.Path()), rctx, true
+		return errors.NewPermanentRedirect("%s/", m.base(path)), rctx, true
 	}
 
 	if rctx != nil {
@@ -129,4 +130,8 @@ func (m *Mux) Resolve(path string, rctx *context.RoutingContext) (web.Handler, *
 	}
 
 	return h, rctx, true
+}
+
+func (m *Mux) base(file string) string {
+	return path.Base(file)
 }
