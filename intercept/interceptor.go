@@ -51,7 +51,7 @@ func (m *Interceptor) TryServeHTTP(w http.ResponseWriter, r *http.Request) error
 		}
 	}
 
-	if err != nil {
+	if err == nil {
 		// no error via context, ask the Writer
 		err = w2.Error()
 	}
