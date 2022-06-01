@@ -7,6 +7,10 @@ import (
 	"go.sancus.dev/web/errors"
 )
 
+const (
+	DefaultReadBufferSize = 4096
+)
+
 type Interceptor struct {
 	h http.Handler
 }

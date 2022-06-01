@@ -41,6 +41,25 @@ func (m *WriteInterceptor) Error() web.Error {
 	return errors.NewWebError(m.code, m.header, m.buffer.Bytes())
 }
 
+func (m *WriteInterceptor) readFrom(original httpsnoop.ReadFromFunc, src io.Reader) (int64, error) {
+	if !m.headersWritten {
+		m.rw.WriteHeader(http.StatusOK)
+	}
+
+	if m.capture {
+		// buffer
+		return m.buffer.ReadFrom(src)
+	} else if m.mute {
+		// blackhole
+		var dummy [DefaultReadBufferSize]byte
+		n, err := src.Read(dummy[:])
+		return int64(n), err
+	} else {
+		// real
+		return original(src)
+	}
+}
+
 func (m *WriteInterceptor) write(original httpsnoop.WriteFunc, b []byte) (int, error) {
 	if !m.headersWritten {
 		m.rw.WriteHeader(http.StatusOK)
@@ -163,9 +182,7 @@ func NewWriter(w http.ResponseWriter, method string) *WriteInterceptor {
 
 		ReadFrom: func(original httpsnoop.ReadFromFunc) httpsnoop.ReadFromFunc {
 			return func(src io.Reader) (int64, error) {
-				err := errors.ErrNotImplemented("%T.%s", m, "ReadFrom")
-				log.Fatal(err)
-				return 0, err
+				return m.readFrom(original, src)
 			}
 		},
 
