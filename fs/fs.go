@@ -8,7 +8,6 @@ import (
 	"path"
 
 	"go.sancus.dev/web"
-	"go.sancus.dev/web/errors"
 )
 
 type FileHandler struct {
@@ -23,8 +22,6 @@ type FS struct {
 }
 
 func (fsys *FS) getHandler(name, index string) http.Handler {
-	log.Printf("%+v: name:%q index:%q", errors.Here(), name, index)
-
 	if f, _ := fsys.FS.Open(name[1:]); f != nil {
 		// match
 		if h, ok := f.(http.Handler); ok {
