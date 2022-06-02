@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -83,17 +84,22 @@ func (m *Embedder) postProcess(name string, blob *Blob) error {
 
 	switch s0 {
 	case "text/plain":
-		if strings.HasSuffix(name, ".css") {
+		switch path.Ext(name) {
+		case ".css":
 			s0 = "text/css"
-		} else if strings.HasSuffix(name, ".js") {
+		case ".js":
+			s0 = "application/javascript"
+		case ".mjs":
 			s0 = "text/javascript"
-		} else if strings.HasSuffix(name, ".hbs") {
+		case ".hbs":
 			s0 = "text/x-handlebars-template"
-		} else {
+		default:
+			// other text/plain files
 			return nil
 		}
 
 	default:
+		// other files
 		return nil
 	}
 
