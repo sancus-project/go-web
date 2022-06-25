@@ -17,6 +17,7 @@ const (
 )
 
 func ParseForm(req *http.Request, size int64) error {
+	var err error
 
 	if req.Form != nil {
 		// Form already parsed
@@ -29,16 +30,14 @@ func ParseForm(req *http.Request, size int64) error {
 
 	t := strings.Split(req.Header.Get("Content-Type"), ";")[0]
 	if t == "application/x-www-form-urlencoded" {
-		return req.ParseForm()
+		err = req.ParseForm()
 	} else if strings.HasPrefix(t, "multipart/form-data") {
-		return req.ParseMultipartForm(size)
+		err = req.ParseMultipartForm(size)
 	} else {
-		var err errors.BadRequestError
-		err.AppendErrorf("Invalid Content-Type %q", t)
-		return err
+		err = errors.New("Invalid Content-Type %q", t)
 	}
 
-	return nil
+	return errors.BadRequest(err).AsError()
 }
 
 func FormValue(req *http.Request, key string) (string, error, bool) {
