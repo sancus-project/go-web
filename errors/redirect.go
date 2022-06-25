@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"go.sancus.dev/web"
+	"go.sancus.dev/web/tools"
 )
 
 func CodeIsRedirect(code int) bool {
@@ -17,21 +18,22 @@ func CodeIsRedirect(code int) bool {
 }
 
 type RedirectError struct {
-	location string
-	code     int
+	HandlerError
 }
 
 func (e RedirectError) Location() string {
-	if len(e.location) == 0 {
+	location := e.Header.Get("Location")
+	if len(location) == 0 {
 		return "/"
 	}
-	return e.location
+	return location
 }
 
 func (e RedirectError) Status() int {
 	// 300 StatusMultipleChoices not supported
-	if e.code > 300 && e.code < 400 {
-		return e.code
+	code := e.HandlerError.Code
+	if code > 300 && code < 400 {
+		return code
 	} else {
 		return http.StatusTemporaryRedirect
 	}
@@ -50,28 +52,17 @@ func (e RedirectError) Error() string {
 	return fmt.Sprintf("%v redirect: %q", e.Status(), e.Location())
 }
 
-func (e *RedirectError) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
-	return e
-}
-
-func (e *RedirectError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	code := e.Status()
-	location := e.Location()
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-	w.Header().Set("Location", location)
-	w.WriteHeader(code)
-
-	fmt.Fprintf(w, "Redirected to %s", location)
-}
-
 func newRedirect(code int, location string, args ...interface{}) *RedirectError {
 	if len(args) > 0 {
 		location = fmt.Sprintf(location, args...)
 	}
 
-	return &RedirectError{location, code}
+	return &RedirectError{
+		HandlerError: HandlerError{
+			Code:   code,
+			Header: tools.NewHeader("Location", location),
+		},
+	}
 }
 
 // 301
@@ -111,7 +102,7 @@ func AsRedirect(err error) (*RedirectError, bool) {
 			// Ours, not Redirect
 			goto fail
 		case web.Error:
-			// Friedly
+			// Friendly
 			code := v.Status()
 
 			if !CodeIsRedirect(code) {
@@ -121,10 +112,7 @@ func AsRedirect(err error) (*RedirectError, bool) {
 				// check http.Header
 				if loc := e.Header.Get("Location"); loc != "" {
 					// Redirect
-					p := &RedirectError{
-						location: loc,
-						code:     code,
-					}
+					p := newRedirect(code, loc)
 					return p, true
 				}
 			} else if e, ok := err.(interface {
@@ -133,10 +121,7 @@ func AsRedirect(err error) (*RedirectError, bool) {
 				// Redirect with `Header() http.Header` interface
 				if loc := e.Header().Get("Location"); loc != "" {
 					//  Redirect
-					p := &RedirectError{
-						location: loc,
-						code:     code,
-					}
+					p := newRedirect(code, loc)
 					return p, true
 				}
 			} else if e, ok := err.(interface {
@@ -145,10 +130,7 @@ func AsRedirect(err error) (*RedirectError, bool) {
 				// Redirect with `Location() string` interface
 				if loc := e.Location(); loc != "" {
 					// Redirect
-					p := &RedirectError{
-						location: loc,
-						code:     code,
-					}
+					p := newRedirect(code, loc)
 					return p, true
 				}
 			}

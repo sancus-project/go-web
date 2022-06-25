@@ -32,10 +32,7 @@ func newWebError(code int, headers http.Header, body []byte, readError error) we
 
 	if CodeIsRedirect(code) {
 		location := headers.Get("Location")
-		return &RedirectError{
-			location: location,
-			code:     code,
-		}
+		return newRedirect(code, location)
 	} else if code == http.StatusMethodNotAllowed {
 		allowed := headers.Get("Allowed")
 		return &MethodNotAllowedError{
