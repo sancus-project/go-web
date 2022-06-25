@@ -10,7 +10,7 @@ type PanicError struct {
 	errors.Panic
 }
 
-func (_ PanicError) Status() int {
+func (PanicError) Status() int {
 	return http.StatusInternalServerError
 }
 
