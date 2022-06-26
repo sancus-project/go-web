@@ -22,12 +22,13 @@ var (
 )
 
 type ErrorDescriptor struct {
-	Code    int            `json:"statusCode"`
-	Message string         `json:"statusMessage"`
-	Header  http.Header    `json:"-"`
-	Fatal   error          `json:"fatal,omitempty"`
-	Err     []error        `json:"error,omitempty"`
-	Stack   []errors.Frame `json:"stack,omitempty"`
+	Code     int            `json:"statusCode"`
+	Message  string         `json:"statusMessage"`
+	Header   http.Header    `json:"-"`
+	Location string         `json:"location,omitempty"`
+	Fatal    error          `json:"fatal,omitempty"`
+	Err      []error        `json:"error,omitempty"`
+	Stack    []errors.Frame `json:"stack,omitempty"`
 }
 
 func (desc *ErrorDescriptor) Status() int {
@@ -39,7 +40,11 @@ func (desc *ErrorDescriptor) Error() string {
 }
 
 func (desc *ErrorDescriptor) String() string {
-	return ErrorText(desc.Code)
+	if loc := desc.Location; len(loc) > 0 {
+		return fmt.Sprintf("Redirected to %s", loc)
+	} else {
+		return ErrorText(desc.Code)
+	}
 }
 
 // Serve Error as HTTP Response if it's not an actual error
@@ -76,6 +81,13 @@ func (desc *ErrorDescriptor) ServeHTTP(rw http.ResponseWriter, req *http.Request
 	}
 
 	switch {
+	case CodeIsRedirect(code):
+		// redirect
+		tools.SetHeader(hdr, "Location", desc.Location)
+		rw.WriteHeader(code)
+
+		fmt.Fprintf(rw, "Redirected to %s", desc.Location)
+
 	case code == http.StatusOK || code == http.StatusNoContent:
 		// quick success
 		rw.WriteHeader(http.StatusNoContent)
@@ -194,7 +206,7 @@ func AsDescriptor(err web.Error) *ErrorDescriptor {
 	}); ok {
 		for k, v := range he.Headers() {
 			switch k {
-			case "Context-Type", "X-Context-Type-Options":
+			case "Context-Type", "X-Context-Type-Options", "Location":
 				// skip
 			default:
 				for _, s := range v {
@@ -202,6 +214,19 @@ func AsDescriptor(err web.Error) *ErrorDescriptor {
 				}
 			}
 		}
+	}
+
+	// Redirect
+	if CodeIsRedirect(code) {
+		var loc string
+
+		if redirect, ok := AsRedirect(err); ok {
+			loc = redirect.Location()
+		} else {
+			loc = "/"
+		}
+
+		desc.Location = loc
 	}
 
 	if p, ok := err.(interface {
