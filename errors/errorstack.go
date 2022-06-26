@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"go.sancus.dev/core/errors"
+	"go.sancus.dev/web/tools"
 )
 
 var (
@@ -17,6 +18,8 @@ var (
 
 type BadRequestError struct {
 	errors.ErrorStack
+
+	Header http.Header
 }
 
 func (err *BadRequestError) AsError() error {
@@ -35,6 +38,18 @@ func (err *BadRequestError) Status() int {
 	}
 }
 
+func (err *BadRequestError) Headers() http.Header {
+	if err.Header == nil {
+		err.Header = make(map[string][]string)
+	}
+	return err.Header
+}
+
+func (err *BadRequestError) WithHeaders(hdr http.Header) *BadRequestError {
+	tools.CopyHeaders(err.Headers(), hdr)
+	return err
+}
+
 func (err *BadRequestError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	serveHTTP(err, w, r)
 }
@@ -51,6 +66,8 @@ func BadRequest(errs ...error) *BadRequestError {
 
 type NotAcceptableError struct {
 	errors.ErrorStack
+
+	Header http.Header
 }
 
 func (err *NotAcceptableError) AsError() error {
@@ -67,6 +84,18 @@ func (err *NotAcceptableError) Status() int {
 	} else {
 		return http.StatusNotAcceptable
 	}
+}
+
+func (err *NotAcceptableError) Headers() http.Header {
+	if err.Header == nil {
+		err.Header = make(map[string][]string)
+	}
+	return err.Header
+}
+
+func (err *NotAcceptableError) WithHeaders(hdr http.Header) *NotAcceptableError {
+	tools.CopyHeaders(err.Headers(), hdr)
+	return err
 }
 
 func (err *NotAcceptableError) ServeHTTP(w http.ResponseWriter, r *http.Request) {

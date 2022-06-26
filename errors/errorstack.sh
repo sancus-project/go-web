@@ -22,6 +22,8 @@ cat <<EOT
 
 type $T struct {
 	errors.ErrorStack
+
+	Header http.Header
 }
 
 func (err *$T) AsError() error {
@@ -38,6 +40,18 @@ func (err *$T) Status() int {
 	} else {
 		return http.$S
 	}
+}
+
+func (err *$T) Headers() http.Header {
+	if err.Header == nil {
+		err.Header = make(map[string][]string)
+	}
+	return err.Header
+}
+
+func (err *$T) WithHeaders(hdr http.Header) *$T {
+	tools.CopyHeaders(err.Headers(), hdr)
+	return err
 }
 
 func (err *$T) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +78,7 @@ import (
 	"net/http"
 
 	"go.sancus.dev/core/errors"
+	"go.sancus.dev/web/tools"
 )
 
 var (

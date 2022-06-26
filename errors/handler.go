@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"go.sancus.dev/web"
+	"go.sancus.dev/web/tools"
 )
 
 var (
@@ -50,7 +51,16 @@ func (err HandlerError) Error() string {
 }
 
 func (err HandlerError) Headers() http.Header {
+	if err.Header == nil {
+		err.Header = make(map[string][]string)
+	}
 	return err.Header
+}
+
+// WithHeaders imports headers into the HandlerError
+func (err *HandlerError) WithHeaders(hdr http.Header) *HandlerError {
+	tools.CopyHeaders(err.Headers(), hdr)
+	return err
 }
 
 // Serve Error as HTTP Response
