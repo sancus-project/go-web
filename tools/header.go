@@ -31,8 +31,14 @@ func SetHeader(hdr http.Header, key, value string, args ...interface{}) http.Hea
 	return hdr
 }
 
-func CopyHeaders(dst http.Header, src http.Header) {
+func CopyHeaders(dst http.Header, src http.Header, except ...string) {
 	for key, values := range src {
+		for _, k := range except {
+			if strings.EqualFold(key, k) {
+				// skip
+				continue
+			}
+		}
 		for _, value := range values {
 			// TODO: deduplicate
 			dst.Add(key, value)
