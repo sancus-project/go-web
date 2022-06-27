@@ -196,8 +196,9 @@ func AsDescriptor(err web.Error) *ErrorDescriptor {
 
 	// Summary
 	desc := &ErrorDescriptor{
-		Code:   code,
-		Header: make(map[string][]string),
+		Code:    code,
+		Message: http.StatusText(code),
+		Header:  make(map[string][]string),
 	}
 
 	// Headers
