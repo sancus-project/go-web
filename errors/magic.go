@@ -84,7 +84,7 @@ func NewFromError(err error) error {
 		// if it can render itself it might know better
 		goto done
 	case web.Error:
-		// Friedly
+		// Friendly
 		code = v.Status()
 	default:
 		code = http.StatusInternalServerError
