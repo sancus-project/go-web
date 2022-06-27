@@ -36,7 +36,7 @@ func (m *MethodHandler) TryServeHTTP(w http.ResponseWriter, r *http.Request) err
 		err = m.MethodNotAllowed(r)
 	}
 
-	if wee := errors.NewFromError(err); wee == nil {
+	if wee := errors.NewFromError(err); wee != nil {
 		return wee
 	}
 	return nil
