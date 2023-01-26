@@ -111,7 +111,12 @@ func (embed *Embedder) WriteFile(fname string) error {
 	} else if err = f.Sync(); err != nil {
 		// Sync error
 		return err
-	} else if err = os.Rename(tmpname, fname); err != nil {
+	} else if err = f.Close(); err != nil {
+		// Close error
+		return err
+	}
+
+	if err = os.Rename(tmpname, fname); err != nil {
 		// Rename error
 		return err
 	} else {
