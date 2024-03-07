@@ -136,13 +136,13 @@ func FitnessAndQuality(mimetype string, parsedRanges []Mime) (fitness int, quali
 	return bestfitness, bestquality
 }
 
-//    Find the best match for a given mime-type against
-//    a list of media_ranges that have already been
-//    parsed by ParseMediaRange(). Returns the
-//    'q' quality parameter of the best match, 0 if no
-//    match was found. This function bahaves the same as quality()
-//    except that 'parsed_ranges' must be a list of
-//    parsed media ranges.
+// Find the best match for a given mime-type against
+// a list of media_ranges that have already been
+// parsed by ParseMediaRange(). Returns the
+// 'q' quality parameter of the best match, 0 if no
+// match was found. This function bahaves the same as quality()
+// except that 'parsed_ranges' must be a list of
+// parsed media ranges.
 func QualityParsed(mimetype string, parsedRanges []Mime) (quality float64) {
 	_, quality = FitnessAndQuality(mimetype, parsedRanges)
 	return
@@ -166,14 +166,14 @@ func Quality(mimetype string, ranges string) (quality float64) {
 	return QualityParsed(mimetype, ParseHeader(ranges))
 }
 
-//  Takes a list of supported mime-types and finds the best
-//  match for all the media-ranges listed in header. The value of
-//  header must be a string that conforms to the format of the
-//  HTTP Accept: header. The value of 'supported' is a list of
-//  mime-types.
+// Takes a list of supported mime-types and finds the best
+// match for all the media-ranges listed in header. The value of
+// header must be a string that conforms to the format of the
+// HTTP Accept: header. The value of 'supported' is a list of
+// mime-types.
 //
-//  BestMatch(['application/xbel+xml', 'text/xml'], 'text/*;q=0.5,* /*; q=0.1')
-//  'text/xml'
+// BestMatch(['application/xbel+xml', 'text/xml'], 'text/*;q=0.5,* /*; q=0.1')
+// 'text/xml'
 func BestMatch(supported []string, header string) string {
 	parsedHeader := ParseHeader(header)
 	if len(supported) == 0 {

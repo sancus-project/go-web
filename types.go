@@ -11,7 +11,6 @@ type Error interface {
 	Status() int
 }
 
-//
 type HandlerFunc func(http.ResponseWriter, *http.Request) error
 
 func (f HandlerFunc) TryServeHTTP(w http.ResponseWriter, r *http.Request) error {
@@ -22,7 +21,6 @@ type Handler interface {
 	TryServeHTTP(http.ResponseWriter, *http.Request) error
 }
 
-//
 type RendererFunc func(http.ResponseWriter, *http.Request) error
 
 func (f RendererFunc) Render(w http.ResponseWriter, r *http.Request) error {
@@ -33,7 +31,6 @@ type Renderer interface {
 	Render(http.ResponseWriter, *http.Request) error
 }
 
-//
 type MiddlewareHandlerFunc func(http.Handler) http.Handler
 
 func (f MiddlewareHandlerFunc) Middleware(next http.Handler) http.Handler {
