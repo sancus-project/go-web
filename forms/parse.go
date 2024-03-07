@@ -1,7 +1,9 @@
 package forms
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -29,15 +31,33 @@ func ParseForm(req *http.Request, size int64) error {
 	}
 
 	t := strings.Split(req.Header.Get("Content-Type"), ";")[0]
-	if t == "application/x-www-form-urlencoded" {
+	switch {
+	case t == "application/x-www-form-urlencoded":
 		err = req.ParseForm()
-	} else if strings.HasPrefix(t, "multipart/form-data") {
+	case t == "application/json":
+		err = parseJSONAsForm(req)
+	case strings.HasPrefix(t, "multipart/form-data"):
 		err = req.ParseMultipartForm(size)
-	} else {
+	default:
 		err = errors.New("Invalid Content-Type %q", t)
 	}
 
 	return errors.BadRequest(err).AsError()
+}
+
+func parseJSONAsForm(req *http.Request) error {
+	m := make(map[string]string)
+	if err := json.NewDecoder(req.Body).Decode(&m); err != nil {
+		return err
+	}
+
+	form := make(url.Values)
+	for k, v := range m {
+		form[k] = append(form[k], v)
+	}
+
+	req.Form = form
+	return nil
 }
 
 func FormValue(req *http.Request, key string) (string, error, bool) {
