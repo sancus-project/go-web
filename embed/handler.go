@@ -44,11 +44,9 @@ func (f *File) TryServeHTTP(rw http.ResponseWriter, req *http.Request) error {
 	return fd.TryServeHTTP(rw, req)
 }
 
-func (fd *FileDescriptor) TryServeHTTP(rw http.ResponseWriter, req *http.Request) (err error) {
+func (fd *FileDescriptor) TryServeHTTP(rw http.ResponseWriter, req *http.Request) error {
 	switch req.Method {
 	case "GET", "HEAD":
-		var f io.Reader
-
 		// Headers
 		setNotZeroTimeHeader(rw, "Last-Modified", fd.file.ModTime)
 		setNotZeroHeader(rw, "Content-Type", fd.file.ContentType)
@@ -64,33 +62,36 @@ func (fd *FileDescriptor) TryServeHTTP(rw http.ResponseWriter, req *http.Request
 			rw.Header().Set("Etag", s)
 		}
 
-		if req.Method == "GET" {
-			var enc string
-
-			// encoding
-			q, err := qlist.ParseQualityHeader(req.Header, "Accept-Encoding")
-			if err != nil {
-				err = errors.Wrap(err, "Accept-Encoding")
-				return errors.BadRequest(err)
-			}
-
-			enc, f, err = fd.WithAcceptEncodingQuality(q)
-			if err != nil {
-				return err
-			}
-
-			setNotZeroHeader(rw, "Content-Encoding", enc)
+		// encoding
+		q, err := qlist.ParseQualityHeader(req.Header, "Accept-Encoding")
+		if err != nil {
+			err = errors.Wrap(err, "Accept-Encoding")
+			return errors.BadRequest(err)
 		}
 
-		// only emit Content-Length after the request has been accepted
-		setFormattedHeader(rw, "Content-Length", "%d", fd.file.Size)
+		enc, f, err := fd.WithAcceptEncodingQuality(q)
+		if err != nil {
+			return err
+		}
 
-		if f != nil {
+		defer f.Close()
+		setNotZeroHeader(rw, "Content-Encoding", enc)
+
+		// body size
+		fi, err := f.Stat()
+		if err != nil {
+			return err
+		}
+
+		setFormattedHeader(rw, "Content-Length", "%d", fi.Size())
+
+		if req.Method == "GET" {
 			// GET, copy encoded data
 			_, err = io.Copy(rw, f)
+			return err
 		}
-		return
 
+		return nil
 	default:
 		// OPTIONS
 		return errors.MethodNotAllowed(req.Method, "GET", "HEAD")

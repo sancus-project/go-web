@@ -16,7 +16,8 @@ var (
 )
 
 type FileInfo struct {
-	sys *File
+	sys  *File
+	size int64
 }
 
 func (fi FileInfo) IsDir() bool       { return false }
@@ -25,8 +26,15 @@ func (fi FileInfo) Mode() fs.FileMode { return fs.FileMode(0444) }
 
 func (fi FileInfo) ModTime() time.Time { return fi.sys.ModTime }
 func (fi FileInfo) Name() string       { return fi.sys.Name }
-func (fi FileInfo) Size() int64        { return fi.sys.Size }
 func (fi FileInfo) Sys() interface{}   { return fi.sys }
+
+func (fi FileInfo) Size() int64 {
+	if fi.size < 0 {
+		return fi.sys.Size
+	}
+
+	return fi.size
+}
 
 func (fi *FileInfo) Info() (fs.FileInfo, error) {
 	return fi, nil
@@ -47,7 +55,7 @@ type File struct {
 }
 
 func (file *File) Info() (fs.FileInfo, error) {
-	return FileInfo{file}, nil
+	return FileInfo{file, -1}, nil
 }
 
 func (file *File) Encodings() []string {
@@ -60,13 +68,13 @@ func (file *File) Encodings() []string {
 	return list
 }
 
-func (file *File) NewEncodedReader(encoding string) (io.Reader, error) {
+func (file *File) NewEncodedReader(encoding string) (io.Reader, int, error) {
 	// direct
 	for _, c := range file.Content {
 		if encoding == c.Encoding {
 			// match
 			r := bytes.NewReader(c.Bytes)
-			return r, nil
+			return r, len(c.Bytes), nil
 		}
 	}
 
@@ -79,12 +87,13 @@ func (file *File) NewEncodedReader(encoding string) (io.Reader, error) {
 		Err:  errors.New("Encoding %q not supported", encoding),
 	}
 
-	return nil, err
+	return nil, 0, err
 }
 
 func (file *File) Open() (fs.File, error) {
 	fd := &FileDescriptor{
 		file: file,
+		size: -1,
 	}
 	return fd, nil
 }
@@ -93,6 +102,7 @@ type FileDescriptor struct {
 	encoding string
 	reader   io.Reader
 	file     *File
+	size     int64
 }
 
 func (fd *FileDescriptor) Close() error {
@@ -103,7 +113,7 @@ func (fd *FileDescriptor) Close() error {
 
 func (fd *FileDescriptor) Read(buf []byte) (int, error) {
 	if fd.reader == nil {
-		r, err := fd.file.NewEncodedReader(fd.encoding)
+		r, _, err := fd.file.NewEncodedReader(fd.encoding)
 		if err != nil {
 			return 0, err
 		}
@@ -113,12 +123,12 @@ func (fd *FileDescriptor) Read(buf []byte) (int, error) {
 }
 
 func (fd *FileDescriptor) Stat() (fs.FileInfo, error) {
-	return fd.file.Info()
+	return FileInfo{fd.file, fd.size}, nil
 }
 
 func (fd *FileDescriptor) WithEncoding(encoding string) (*FileDescriptor, error) {
 
-	r, err := fd.file.NewEncodedReader(encoding)
+	r, l, err := fd.file.NewEncodedReader(encoding)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +137,8 @@ func (fd *FileDescriptor) WithEncoding(encoding string) (*FileDescriptor, error)
 		encoding: encoding,
 		reader:   r,
 		file:     fd.file,
+		size:     int64(l),
 	}
+
 	return fd2, nil
 }
